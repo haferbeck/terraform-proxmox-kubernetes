@@ -1,0 +1,79 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["local>devops/renovate"],
+  "separateMinorPatch": true,
+  "packageRules": [
+    {
+      "description": "Stability: Wait 3 days before raising PRs for patch updates",
+      "matchUpdateTypes": ["patch"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Stability: Wait 7 days before raising PRs for minor updates",
+      "matchUpdateTypes": ["minor"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "Stability: Wait 14 days before raising PRs for major updates",
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "14 days"
+    },
+    {
+      "description": "Stability: Kubernetes — block minor/major updates",
+      "matchDatasources": ["github-tags"],
+      "matchDepNames": ["kubernetes/kubernetes"],
+      "matchUpdateTypes": ["minor", "major"],
+      "enabled": false
+    },
+    {
+      "description": "Stability: Skip X.Y.0 releases",
+      "matchDatasources": ["github-tags", "helm"],
+      "matchDepNames": [
+        "cert-manager",
+        "cilium",
+        "longhorn",
+        "siderolabs/talos"
+      ],
+      "allowedVersions": "!/^v?\\d+\\.\\d+\\.0$/"
+    },
+    {
+      "description": "No digest pinning: disable pinDigest for CCMs",
+      "matchDatasources": ["docker"],
+      "matchDepNames": [
+        "talos-cloud-controller-manager",
+        "proxmox-cloud-controller-manager"
+      ],
+      "pinDigests": false
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "Helm: Update Helm Charts used in Terraform",
+      "customType": "regex",
+      "managerFilePatterns": ["/^variables\\.tf$/"],
+      "matchStrings": [
+        "variable\\s+\"[^\"]*helm_repository\"\\s*{[^}]*default\\s*=\\s*\"(?<registryUrl>https?://[^\"]+)\"[^}]*?}\\s*variable\\s+\"[^\"]*helm_chart\"\\s*{[^}]*default\\s*=\\s*\"(?<depName>[^\"]+)\"[^}]*?}\\s*variable\\s+\"[^\"]*helm_version\"\\s*{[^}]*default\\s*=\\s*\"(?<currentValue>[^\"]+)\"[^}]*?}"
+      ],
+      "datasourceTemplate": "helm"
+    },
+    {
+      "description": "Helm:Update OCI Helm Charts used in Terraform",
+      "customType": "regex",
+      "managerFilePatterns": ["/^variables\\.tf$/"],
+      "matchStrings": [
+        "variable\\s+\"[^\"]*helm_repository\"\\s*{[^}]*default\\s*=\\s*\"oci://(?<ociRegistry>[^\"]+)\"[^}]*?}\\s*variable\\s+\"[^\"]*helm_chart\"\\s*{[^}]*default\\s*=\\s*\"(?<depName>[^\"]+)\"[^}]*?}\\s*variable\\s+\"[^\"]*helm_version\"\\s*{[^}]*default\\s*=\\s*\"(?<currentValue>[^\"]+)\"[^}]*?}"
+      ],
+      "datasourceTemplate": "docker",
+      "packageNameTemplate": "{{{ociRegistry}}}/{{{depName}}}"
+    },
+    {
+      "description": "GitHub: Update GitHub Dependencies",
+      "customType": "regex",
+      "managerFilePatterns": ["/^variables\\.tf$/"],
+      "matchStrings": [
+        "variable\\s*\"[^\"]+_version\"\\s*{[^}]*\\s*default\\s*=\\s*\"(?<currentValue>[^\"]+)\"\\s*#\\s*https://github.com/(?<depName>[^\\s]+)[^}]*}"
+      ],
+      "datasourceTemplate": "github-tags"
+    }
+  ]
+}

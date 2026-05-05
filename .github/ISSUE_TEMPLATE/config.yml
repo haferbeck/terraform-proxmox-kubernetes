@@ -1,0 +1,22 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Discussions
+    url: https://github.com/haferbeck/terraform-proxmox-kubernetes/discussions
+    about: Use Discussions for general questions, configuration help, and community support.
+
+  - name: Upstream module (terraform-hcloud-kubernetes)
+    url: https://github.com/hcloud-k8s/terraform-hcloud-kubernetes
+    about: This module is a Proxmox port of the upstream Hetzner Cloud module. Some issues may apply to both.
+
+  - name: Talos Linux Documentation
+    url: https://www.talos.dev/docs/
+    about: For OS, machine config, and cluster lifecycle topics.
+
+  - name: Proxmox VE Documentation
+    url: https://pve.proxmox.com/pve-docs/
+    about: For Proxmox host, storage, and network configuration topics.
+
+  - name: bpg/proxmox provider issues
+    url: https://github.com/bpg/terraform-provider-proxmox/issues
+    about: For provider bugs, missing features, or API behaviour questions report directly to bpg/proxmox.

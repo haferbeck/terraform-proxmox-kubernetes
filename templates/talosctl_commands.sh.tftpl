@@ -1,0 +1,224 @@
+
+talosconfig=$(mktemp)
+cleanup() { rm -f "$talosconfig"; }
+trap 'cleanup' EXIT
+trap 'cleanup; exit 1' HUP INT TERM QUIT PIPE
+
+printf '%s' "$TALOSCONFIG" > "$talosconfig"
+
+talos_retry_or_exit() {
+  retry_var=$1
+  eval "retry_value=\$$retry_var"
+
+  if [ "$retry_value" -gt "${talosctl_retries}" ]; then
+    exit 1
+  fi
+
+  printf '%s\n' "Retry $retry_value/${talosctl_retries} ..."
+  retry_value=$((retry_value + 1))
+  eval "$retry_var=$retry_value"
+  sleep 10
+}
+
+talos_health_check() {
+  if ! ${healthcheck_enabled}; then
+    return 0
+  fi
+
+  talosctl health \
+    --talosconfig "$talosconfig" \
+    --server=true \
+    --control-plane-nodes '${join(",", control_plane_nodes)}' \
+    --worker-nodes '${join(",", worker_nodes)}' \
+    --nodes "${talos_primary_node}" \
+    "$@"
+}
+
+talos_wait_for_health() {
+  health_retry=1
+  until talos_health_check; do
+    talos_retry_or_exit health_retry
+  done
+}
+
+talos_upgrade() {
+  talosctl upgrade \
+    --talosconfig "$talosconfig" \
+%{ if talos_upgrade_debug ~}
+    --debug \
+%{ endif ~}
+%{ if talos_upgrade_force ~}
+    --force \
+%{ endif ~}
+%{ if talos_upgrade_insecure ~}
+    --insecure \
+%{ endif ~}
+%{ if talos_upgrade_stage ~}
+    --stage \
+%{ endif ~}
+%{ if talos_upgrade_reboot_mode != null ~}
+    --reboot-mode '${talos_upgrade_reboot_mode}' \
+%{ endif ~}
+    --image '${talos_installer_image_url}' \
+    "$@"
+}
+
+talos_apply_config() {
+  talosctl apply-config \
+    --talosconfig "$talosconfig" \
+    "$@"
+}
+
+talos_reboot() {
+  talosctl reboot \
+    --talosconfig "$talosconfig" \
+%{ if talos_reboot_debug ~}
+    --debug \
+%{ endif ~}
+%{ if talos_reboot_mode != null ~}
+    --mode '${talos_reboot_mode}' \
+%{ endif ~}
+    "$@"
+}
+
+talos_upgrade_k8s() {
+  awk -v talosconfig="$talosconfig" '
+    function indent(s) { return match(s, /[^[:space:]]/) ? RSTART - 1 : 0 }
+    function out(s)    { print s; system("") }
+    function redact(s) { sub(/:[[:space:]]*.*/, ": <REDACTED>", s); return s }
+
+    BEGIN {
+      sq = sprintf("%c", 39)
+      us = sprintf("%c", 31)
+
+      secret_re              = "\\.[Ss]ecrets?/"
+      allowed_secret_keys_re = "^(apiVersion|kind|name|namespace|type)$"
+
+      # Build talosctl command and append exit-code marker line
+      run = "talosctl upgrade-k8s"
+      run = run " --talosconfig " sq talosconfig sq
+      run = run " --nodes "       sq "${talos_primary_node}" sq
+      run = run " --endpoint "    sq "${kube_api_url}" sq
+      run = run " --to "          sq "${kubernetes_version}" sq
+      run = run " --with-docs=false --with-examples=false"
+%{ if kubernetes_apiserver_image != null ~}
+      run = run " --apiserver-image " sq "${kubernetes_apiserver_image}" sq
+%{ endif ~}
+%{ if kubernetes_controller_manager_image != null ~}
+      run = run " --controller-manager-image " sq "${kubernetes_controller_manager_image}" sq
+%{ endif ~}
+%{ if kubernetes_scheduler_image != null ~}
+      run = run " --scheduler-image " sq "${kubernetes_scheduler_image}" sq
+%{ endif ~}
+%{ if kubernetes_proxy_image != null ~}
+      run = run " --proxy-image " sq "${kubernetes_proxy_image}" sq
+%{ endif ~}
+%{ if kubernetes_kubelet_image != null ~}
+      run = run " --kubelet-image " sq "${kubernetes_kubelet_image}" sq
+%{ endif ~}
+      run = run " ; printf " sq "\\037RC=%d\\n" sq " $?"
+
+      in_secret  = 0
+      drop_block = 0
+
+      while ((run | getline line) > 0) {
+        # Exit code passthrough
+        if (index(line, us "RC=") == 1) {
+          close(run)
+          exit substr(line, 5) + 0
+        }
+
+        # If we redacted a block scalar header, skip its indented body
+        if (drop_block) {
+          t = line
+          sub(/^[-+ ]/, "", t)
+          if (indent(t) > block_indent) continue
+          drop_block = 0
+        }
+
+        # Detect Secret context from talosctl progress lines
+        if (line ~ /^[[:space:]]*>[[:space:]]*processing[[:space:]]+manifest/) {
+          in_secret = (line ~ secret_re)
+          out(line)
+          continue
+        }
+
+        # Detect Secret context from unified diff headers
+        if (line ~ /^[[:space:]]*(---[[:space:]]+a\/|\+\+\+[[:space:]]+b\/)/) {
+          if (line ~ secret_re) {
+            in_secret = 1
+          }
+          out(line)
+          continue
+        }
+
+        # Outside Secret => passthrough unchanged
+        if (!in_secret) {
+          out(line)
+          continue
+        }
+
+        # Inside Secret => parse YAML-ish "key: value"
+        yaml_line = line
+        sub(/^[-+ ]/, "", yaml_line)
+        parse_line = yaml_line
+        sub(/^[[:space:]]*-[[:space:]]+/, "", parse_line)
+        colon_pos = index(parse_line, ":")
+
+        if (!colon_pos) {
+          out(line)
+          continue
+        }
+
+        # Split into key and value
+        key = substr(parse_line, 1, colon_pos - 1)
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", key)
+
+        value = substr(parse_line, colon_pos + 1)
+        sub(/^[[:space:]]+/, "", value)
+
+        # No value on this line
+        if (value == "") {
+          out(line)
+          continue
+        }
+
+        # Block scalar header
+        if (value ~ /^[|>]/) {
+          out(redact(line))
+          drop_block   = 1
+          block_indent = indent(yaml_line)
+          continue
+        }
+
+        # Redact non-allowed keys
+        if (key ~ allowed_secret_keys_re) {
+          out(line)
+        } else {
+          out(redact(line))
+          continue
+        }
+      }
+
+      close(run)
+      exit 1
+    }
+  '
+}
+
+talos_get_version() {
+  talosctl get version \
+    --talosconfig "$talosconfig" \
+    --output jsonpath='{.spec.version}' \
+    "$@" \
+    2>/dev/null || true
+}
+
+talos_get_schematic() {
+  talosctl get extensions \
+    --talosconfig "$talosconfig" \
+    --output json \
+    "$@" \
+    | jq -r 'select(.spec.metadata.name=="schematic") | .spec.metadata.version' \
+    2>/dev/null || true
+}

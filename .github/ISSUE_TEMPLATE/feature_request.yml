@@ -1,0 +1,43 @@
+name: Feature Request
+description: Suggest an idea or improvement for the module
+labels: [enhancement]
+
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      placeholder: What problem would this feature solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      placeholder: How should this be implemented? Reference variable names, file layout, and provider behaviour where relevant.
+    validations:
+      required: true
+
+  - type: textarea
+    id: upstream
+    attributes:
+      label: Upstream Equivalent
+      description: Does the [terraform-hcloud-kubernetes](https://github.com/hcloud-k8s/terraform-hcloud-kubernetes) upstream module already implement this? If yes, link to the upstream variable/file.
+      placeholder: e.g. upstream `cluster_autoscaler.tf`, var `autoscaler_nodepools`
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Links, references, or alternatives considered.
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have searched existing issues and discussions for similar requests.
+          required: true
+        - label: I understand that features without an upstream equivalent need a Proxmox-specific justification.
+          required: true

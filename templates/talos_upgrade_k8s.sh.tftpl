@@ -1,0 +1,9 @@
+talos_wait_for_health
+
+retry=1
+until talos_upgrade_k8s; do
+  talos_retry_or_exit retry
+done
+sleep 5
+
+talos_wait_for_health

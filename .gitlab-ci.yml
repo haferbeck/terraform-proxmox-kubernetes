@@ -1,0 +1,37 @@
+# Pipeline for proxmox-kubernetes Terraform / OpenTofu module.
+#
+# Pre-release:  fmt + tflint + terraform-docs check + validate + KICS + Trivy
+# Post-release: tarball → GitLab Module Registry, GitLab Release, GitHub Release
+#
+# Tags are pushed manually (aligned with upstream terraform-hcloud-kubernetes
+# version line) — version_source: tag. semantic-release is intentionally
+# NOT used for this module.
+#
+# First-run notes:
+#   * tflint and terraform-docs --output-check are on by default. Run them
+#     locally before pushing to keep CI green:
+#       tflint --init && tflint --recursive
+#       terraform-docs .
+#   * GitHub release retries up to 5x for the GitLab→GitHub mirror to
+#     replicate the tag — usually completes within 30s of the tag push.
+
+include:
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/_common@4.3.5
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/init@4.3.5
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-test@4.3.5
+    inputs:
+      module_root: .
+      enable_tofu_test: false # no *.tftest.hcl files in this module yet
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-release@4.3.5
+    inputs:
+      module_name: proxmox-kubernetes
+      module_system: proxmox
+      github_repo: haferbeck/terraform-proxmox-kubernetes
+      version_source: tag
+
+stages:
+  - init
+  - lint
+  - test
+  - publish
+  - release

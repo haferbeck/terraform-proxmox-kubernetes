@@ -1,0 +1,42 @@
+talos_wait_for_health
+
+set -- ${join(" ", upgrade_nodes)}
+for host in "$@"; do
+  retry=1
+  while true; do
+    printf '%s\n' "Checking node $host ..."
+
+    current_version=$(talos_get_version --nodes "$host")
+    current_schematic=$(talos_get_schematic --nodes "$host")
+
+    if [ "$current_version" = "${talos_version}" ] && [ "$current_schematic" = "${talos_schematic_id}" ]; then
+      if [ "$retry" -gt 1 ]; then
+        printf '%s\n' "Node $host is already at Talos $current_version ($current_schematic). Waiting for cluster to stabilize ..."
+        sleep 5
+
+        talos_wait_for_health
+        printf '%s\n' "Node $host upgraded successfully"
+      else
+        printf '%s\n' "Node $host is already at Talos $current_version ($current_schematic). Skipping upgrade ..."
+      fi
+
+      break
+    elif [ -n "$current_version" ] && [ -n "$current_schematic" ]; then
+      printf '%s\n' "Node $host is currently at Talos $current_version ($current_schematic)"
+    else
+      printf '%s\n' "Could not determine current Talos version or schematic for node $host"
+    fi
+
+    printf '%s\n' "Upgrading node $host to Talos ${talos_version} (${talos_schematic_id}) ..."
+    if talos_upgrade --nodes "$host"; then
+      printf '%s\n' "Upgrade successfully completed for node $host"
+      sleep 5
+
+      talos_wait_for_health
+      printf '%s\n' "Node $host upgraded successfully"
+      break
+    fi
+
+    talos_retry_or_exit retry
+  done
+done
