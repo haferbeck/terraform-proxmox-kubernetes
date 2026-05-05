@@ -19,15 +19,15 @@
 #     Code scanning alerts: read+write on top of Contents: read+write.
 
 include:
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/_common@4.3.6
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/init@4.3.6
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-test@4.3.6
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/_common@4.3.7
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/init@4.3.7
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-test@4.3.7
     inputs:
       module_root: .
       enable_tofu_test: false # no *.tftest.hcl files in this module yet
       enable_github_code_scanning: true
       github_repo: haferbeck/terraform-proxmox-kubernetes
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-release@4.3.6
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-release@4.3.7
     inputs:
       module_name: proxmox-kubernetes
       module_system: proxmox
