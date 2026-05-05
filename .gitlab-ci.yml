@@ -16,13 +16,13 @@
 #     replicate the tag — usually completes within 30s of the tag push.
 
 include:
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/_common@4.3.5
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/init@4.3.5
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-test@4.3.5
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/_common@4.3.6
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/init@4.3.6
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-test@4.3.6
     inputs:
       module_root: .
       enable_tofu_test: false # no *.tftest.hcl files in this module yet
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-release@4.3.5
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-release@4.3.6
     inputs:
       module_name: proxmox-kubernetes
       module_system: proxmox
