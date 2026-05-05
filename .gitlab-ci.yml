@@ -1,7 +1,8 @@
 # Pipeline for proxmox-kubernetes Terraform / OpenTofu module.
 #
 # Pre-release:  fmt + tflint + terraform-docs check + validate + KICS + Trivy
-# Post-release: tarball → GitLab Module Registry, GitLab Release, GitHub Release
+#               (default-branch only: KICS+Trivy SARIF → GitHub Code Scanning)
+# Post-release: tarball → GitLab Module Registry, GitHub Release
 #
 # Tags are pushed manually (aligned with upstream terraform-hcloud-kubernetes
 # version line) — version_source: tag. semantic-release is intentionally
@@ -12,8 +13,10 @@
 #     locally before pushing to keep CI green:
 #       tflint --init && tflint --recursive
 #       terraform-docs .
-#   * GitHub release retries up to 5x for the GitLab→GitHub mirror to
-#     replicate the tag — usually completes within 30s of the tag push.
+#   * GitHub release retries 30x/30s = 15min budget for the GitLab→GitHub
+#     mirror to replicate the tag.
+#   * GitHub Code Scanning runs on default branch only; GH_TOKEN needs
+#     Code scanning alerts: read+write on top of Contents: read+write.
 
 include:
   - component: $CI_SERVER_FQDN/devops/pipeline-components/_common@4.3.6
@@ -22,6 +25,8 @@ include:
     inputs:
       module_root: .
       enable_tofu_test: false # no *.tftest.hcl files in this module yet
+      enable_github_code_scanning: true
+      github_repo: haferbeck/terraform-proxmox-kubernetes
   - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-release@4.3.6
     inputs:
       module_name: proxmox-kubernetes
