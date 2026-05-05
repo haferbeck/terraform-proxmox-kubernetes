@@ -7,6 +7,18 @@
     OpenTofu / Terraform Module to deploy Kubernetes on Proxmox VE with Talos Linux
   </p>
 
+  <p>
+    <a href="https://registry.terraform.io/modules/haferbeck/kubernetes/proxmox">
+      <img src="https://img.shields.io/badge/registry.terraform.io-haferbeck%2Fkubernetes%2Fproxmox-blueviolet?logo=terraform" alt="Terraform Registry" />
+    </a>
+    <a href="https://github.com/haferbeck/terraform-proxmox-kubernetes/releases">
+      <img src="https://img.shields.io/github/v/release/haferbeck/terraform-proxmox-kubernetes" alt="GitHub Release" />
+    </a>
+    <a href="LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT" />
+    </a>
+  </p>
+
 </div>
 
 <br />
