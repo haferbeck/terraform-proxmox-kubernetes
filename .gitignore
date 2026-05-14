@@ -1,0 +1,32 @@
+# Local .terraform/.tofu directories
+**/.terraform/*
+**/.tofu/*
+
+# Lock files (module repo — consumer pins their own)
+.terraform.lock.hcl
+**/.terraform.lock.hcl
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+crash.*.log
+
+# Exclude all .tfvars files (may contain sensitive data)
+*.tfvars
+*.tfvars.json
+
+# Ignore override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI configuration files
+.terraformrc
+terraform.rc
+
+# macOS
+.DS_Store
