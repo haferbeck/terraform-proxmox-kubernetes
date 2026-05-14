@@ -769,7 +769,7 @@ Full input/output reference is auto-generated from the module sources via [terra
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.9.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 3.1.0 |
@@ -780,7 +780,7 @@ Full input/output reference is auto-generated from the module sources via [terra
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_external"></a> [external](#provider\_external) | ~> 2.3.0 |
 | <a name="provider_helm"></a> [helm](#provider\_helm) | ~> 3.1.0 |
 | <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.89.0 |
@@ -795,7 +795,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [proxmox_download_file.talos_image](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/download_file) | resource |
 | [proxmox_user_token.ccm](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/user_token) | resource |
 | [proxmox_virtual_environment_role.ccm](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_role) | resource |
@@ -839,7 +839,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Specifies the name of the cluster. This name is used to identify the cluster within the infrastructure and should be unique across all deployments. | `string` | n/a | yes |
 | <a name="input_cluster_vip"></a> [cluster\_vip](#input\_cluster\_vip) | The virtual IP address used for the Kubernetes API server endpoint. This IP is managed via Talos VIP and should be an unused IP within the node network. | `string` | n/a | yes |
 | <a name="input_control_plane_nodepools"></a> [control\_plane\_nodepools](#input\_control\_plane\_nodepools) | Configures the number and attributes of Control Plane nodes. Set proxmox\_node per nodepool to place VMs on a specific Proxmox host (multi-host clusters); falls back to var.proxmox\_node when null. | <pre>list(object({<br/>    name         = string<br/>    cpu          = number<br/>    memory       = number<br/>    disk_size    = number<br/>    ip_offset    = number<br/>    proxmox_node = optional(string)<br/>    labels       = optional(map(string), {})<br/>    annotations  = optional(map(string), {})<br/>    taints       = optional(list(string), [])<br/>    count        = optional(number, 1)<br/>  }))</pre> | n/a | yes |
@@ -863,7 +863,7 @@ No modules.
 | <a name="input_cilium_helm_chart"></a> [cilium\_helm\_chart](#input\_cilium\_helm\_chart) | Name of the Helm chart used for deploying Cilium. | `string` | `"cilium"` | no |
 | <a name="input_cilium_helm_repository"></a> [cilium\_helm\_repository](#input\_cilium\_helm\_repository) | URL of the Helm repository where the Cilium chart is located. | `string` | `"https://helm.cilium.io"` | no |
 | <a name="input_cilium_helm_values"></a> [cilium\_helm\_values](#input\_cilium\_helm\_values) | Custom Helm values for the Cilium chart deployment. These values will merge with and will override the default values provided by the Cilium Helm chart. | `any` | `{}` | no |
-| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.18.7"` | no |
+| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.18.9"` | no |
 | <a name="input_cilium_hubble_enabled"></a> [cilium\_hubble\_enabled](#input\_cilium\_hubble\_enabled) | Enables Hubble observability within Cilium, which may impact performance with an overhead of 1-15% depending on network traffic patterns and settings. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_relay_enabled"></a> [cilium\_hubble\_relay\_enabled](#input\_cilium\_hubble\_relay\_enabled) | Enables Hubble Relay, which requires Hubble to be enabled. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_ui_enabled"></a> [cilium\_hubble\_ui\_enabled](#input\_cilium\_hubble\_ui\_enabled) | Enables the Hubble UI, which requires Hubble Relay to be enabled. | `bool` | `false` | no |
@@ -997,7 +997,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cilium_encryption_info"></a> [cilium\_encryption\_info](#output\_cilium\_encryption\_info) | Cilium traffic encryption settings, including current state and IPsec details if enabled. |
 | <a name="output_cluster_endpoint"></a> [cluster\_endpoint](#output\_cluster\_endpoint) | Kubernetes API endpoint URL. |
 | <a name="output_cluster_vip"></a> [cluster\_vip](#output\_cluster\_vip) | Control plane virtual IP. |
