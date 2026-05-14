@@ -27,6 +27,7 @@ include:
       enable_tofu_test: false # no *.tftest.hcl files in this module yet
       enable_github_code_scanning: true
       github_repo: haferbeck/terraform-proxmox-kubernetes
+      tfdocs_image: "quay.io/terraform-docs/terraform-docs:0.24.0"
   - component: $CI_SERVER_FQDN/devops/pipeline-components/terraform-module-release@5.2.0
     inputs:
       module_name: proxmox-kubernetes
