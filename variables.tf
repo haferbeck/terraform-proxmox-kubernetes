@@ -659,7 +659,7 @@ variable "talos_backup_schedule" {
 # Kubernetes
 variable "kubernetes_version" {
   type        = string
-  default     = "v1.33.10" # https://github.com/kubernetes/kubernetes
+  default     = "v1.33.11" # https://github.com/kubernetes/kubernetes
   description = "Specifies the Kubernetes version to deploy."
 }
 
@@ -964,7 +964,7 @@ variable "longhorn_helm_chart" {
 
 variable "longhorn_helm_version" {
   type        = string
-  default     = "1.11.1"
+  default     = "1.11.2"
   description = "Version of the Longhorn Helm chart to deploy."
 }
 
@@ -1331,6 +1331,6 @@ variable "prometheus_operator_crds_enabled" {
 
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.90.1" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.91.0" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }
