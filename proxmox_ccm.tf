@@ -80,9 +80,15 @@ data "helm_template" "proxmox_ccm" {
         clusters = []
       }
       existingConfigSecret = "proxmox-cloud-controller-manager"
-      useDaemonSet         = true
-      priorityClassName    = "system-cluster-critical"
-      nodeSelector         = { "node-role.kubernetes.io/control-plane" = "" }
+      # Reach the API through KubePrism instead of the Service VIP; the CCM runs
+      # hostNetwork as a DaemonSet, so it stays reachable while CNI is down.
+      extraEnvs = [
+        { name = "KUBERNETES_SERVICE_HOST", value = local.kube_prism_host },
+        { name = "KUBERNETES_SERVICE_PORT", value = tostring(local.kube_prism_port) }
+      ]
+      useDaemonSet      = true
+      priorityClassName = "system-cluster-critical"
+      nodeSelector      = { "node-role.kubernetes.io/control-plane" = "" }
       tolerations = [
         {
           key      = "node-role.kubernetes.io/control-plane"

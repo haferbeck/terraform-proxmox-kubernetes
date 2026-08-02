@@ -774,7 +774,7 @@ Full input/output reference is auto-generated from the module sources via [terra
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 3.1.0 |
 | <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.89.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.8.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.9.0 |
 | <a name="requirement_talos"></a> [talos](#requirement\_talos) | 0.11.0 |
 
 ## Providers
@@ -784,7 +784,7 @@ Full input/output reference is auto-generated from the module sources via [terra
 | <a name="provider_external"></a> [external](#provider\_external) | ~> 2.3.0 |
 | <a name="provider_helm"></a> [helm](#provider\_helm) | ~> 3.1.0 |
 | <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.89.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.8.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | ~> 3.9.0 |
 | <a name="provider_talos"></a> [talos](#provider\_talos) | 0.11.0 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
@@ -853,6 +853,7 @@ No modules.
 | <a name="input_cert_manager_helm_values"></a> [cert\_manager\_helm\_values](#input\_cert\_manager\_helm\_values) | Custom Helm values for the Cert Manager chart deployment. These values will merge with and will override the default values provided by the Cert Manager Helm chart. | `any` | `{}` | no |
 | <a name="input_cert_manager_helm_version"></a> [cert\_manager\_helm\_version](#input\_cert\_manager\_helm\_version) | Version of the Cert Manager Helm chart to deploy. | `string` | `"v1.20.2"` | no |
 | <a name="input_cilium_bpf_datapath_mode"></a> [cilium\_bpf\_datapath\_mode](#input\_cilium\_bpf\_datapath\_mode) | Mode for Pod devices for the core datapath. Allowed values: veth, netkit, netkit-l2. Warning: Netkit is still in beta and should not be used together with IPsec encryption! | `string` | `"veth"` | no |
+| <a name="input_cilium_bpf_host_legacy_routing"></a> [cilium\_bpf\_host\_legacy\_routing](#input\_cilium\_bpf\_host\_legacy\_routing) | Explicitly enable or disable Cilium's legacy host routing. When omitted, the value is automatically determined and only set to `true` if necessary, for example when IPSec is enabled. | `bool` | `null` | no |
 | <a name="input_cilium_egress_gateway_enabled"></a> [cilium\_egress\_gateway\_enabled](#input\_cilium\_egress\_gateway\_enabled) | Enables egress gateway to redirect and SNAT the traffic that leaves the cluster. | `bool` | `false` | no |
 | <a name="input_cilium_enabled"></a> [cilium\_enabled](#input\_cilium\_enabled) | Enables the Cilium CNI deployment. | `bool` | `true` | no |
 | <a name="input_cilium_encryption_enabled"></a> [cilium\_encryption\_enabled](#input\_cilium\_encryption\_enabled) | Enables transparent network encryption using Cilium within the Kubernetes cluster. When enabled, this feature provides added security for network traffic. | `bool` | `true` | no |
@@ -863,7 +864,7 @@ No modules.
 | <a name="input_cilium_helm_chart"></a> [cilium\_helm\_chart](#input\_cilium\_helm\_chart) | Name of the Helm chart used for deploying Cilium. | `string` | `"cilium"` | no |
 | <a name="input_cilium_helm_repository"></a> [cilium\_helm\_repository](#input\_cilium\_helm\_repository) | URL of the Helm repository where the Cilium chart is located. | `string` | `"https://helm.cilium.io"` | no |
 | <a name="input_cilium_helm_values"></a> [cilium\_helm\_values](#input\_cilium\_helm\_values) | Custom Helm values for the Cilium chart deployment. These values will merge with and will override the default values provided by the Cilium Helm chart. | `any` | `{}` | no |
-| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.18.9"` | no |
+| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.18.10"` | no |
 | <a name="input_cilium_hubble_enabled"></a> [cilium\_hubble\_enabled](#input\_cilium\_hubble\_enabled) | Enables Hubble observability within Cilium, which may impact performance with an overhead of 1-15% depending on network traffic patterns and settings. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_relay_enabled"></a> [cilium\_hubble\_relay\_enabled](#input\_cilium\_hubble\_relay\_enabled) | Enables Hubble Relay, which requires Hubble to be enabled. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_ui_enabled"></a> [cilium\_hubble\_ui\_enabled](#input\_cilium\_hubble\_ui\_enabled) | Enables the Hubble UI, which requires Hubble Relay to be enabled. | `bool` | `false` | no |
@@ -898,7 +899,7 @@ No modules.
 | <a name="input_kubernetes_kubelet_image"></a> [kubernetes\_kubelet\_image](#input\_kubernetes\_kubelet\_image) | Specifies a custom image repository for the kubelet (e.g., 'my-registry.io/kubelet'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_proxy_image"></a> [kubernetes\_proxy\_image](#input\_kubernetes\_proxy\_image) | Specifies a custom image repository for kube-proxy (e.g., 'my-registry.io/kube-proxy'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_scheduler_image"></a> [kubernetes\_scheduler\_image](#input\_kubernetes\_scheduler\_image) | Specifies a custom image repository for kube-scheduler (e.g., 'my-registry.io/kube-scheduler'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
-| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Specifies the Kubernetes version to deploy. | `string` | `"v1.33.11"` | no |
+| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Specifies the Kubernetes version to deploy. | `string` | `"v1.33.12"` | no |
 | <a name="input_longhorn_default_storage_class"></a> [longhorn\_default\_storage\_class](#input\_longhorn\_default\_storage\_class) | Set Longhorn as the default storage class. | `bool` | `false` | no |
 | <a name="input_longhorn_enabled"></a> [longhorn\_enabled](#input\_longhorn\_enabled) | Enable or disable Longhorn integration | `bool` | `false` | no |
 | <a name="input_longhorn_helm_chart"></a> [longhorn\_helm\_chart](#input\_longhorn\_helm\_chart) | Name of the Helm chart used for deploying Longhorn. | `string` | `"longhorn"` | no |

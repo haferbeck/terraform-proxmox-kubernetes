@@ -659,7 +659,7 @@ variable "talos_backup_schedule" {
 # Kubernetes
 variable "kubernetes_version" {
   type        = string
-  default     = "v1.33.11" # https://github.com/kubernetes/kubernetes
+  default     = "v1.33.12" # https://github.com/kubernetes/kubernetes
   description = "Specifies the Kubernetes version to deploy."
 }
 
@@ -1035,7 +1035,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.18.9"
+  default     = "1.18.10"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
@@ -1122,6 +1122,12 @@ variable "cilium_load_balancer_acceleration" {
     condition     = contains(["disabled", "native", "best-effort"], var.cilium_load_balancer_acceleration)
     error_message = "cilium_load_balancer_acceleration must be one of: disabled, native or best-effort"
   }
+}
+
+variable "cilium_bpf_host_legacy_routing" {
+  type        = bool
+  default     = null
+  description = "Explicitly enable or disable Cilium's legacy host routing. When omitted, the value is automatically determined and only set to `true` if necessary, for example when IPSec is enabled."
 }
 
 variable "cilium_routing_mode" {

@@ -25,6 +25,7 @@ output "talosconfig_data" {
 output "talos_client_configuration" {
   description = "Detailed configuration data for the Talos client."
   value       = data.talos_client_configuration.this
+  sensitive   = true
 }
 
 output "talos_machine_secrets" {
