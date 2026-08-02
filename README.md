@@ -772,7 +772,7 @@ Full input/output reference is auto-generated from the module sources via [terra
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.9.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
-| <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 3.1.0 |
+| <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 3.2.0 |
 | <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.89.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.9.0 |
 | <a name="requirement_talos"></a> [talos](#requirement\_talos) | 0.11.0 |
@@ -782,7 +782,7 @@ Full input/output reference is auto-generated from the module sources via [terra
 | Name | Version |
 |------|---------|
 | <a name="provider_external"></a> [external](#provider\_external) | ~> 2.3.0 |
-| <a name="provider_helm"></a> [helm](#provider\_helm) | ~> 3.1.0 |
+| <a name="provider_helm"></a> [helm](#provider\_helm) | ~> 3.2.0 |
 | <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.89.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.9.0 |
 | <a name="provider_talos"></a> [talos](#provider\_talos) | 0.11.0 |
@@ -864,7 +864,7 @@ No modules.
 | <a name="input_cilium_helm_chart"></a> [cilium\_helm\_chart](#input\_cilium\_helm\_chart) | Name of the Helm chart used for deploying Cilium. | `string` | `"cilium"` | no |
 | <a name="input_cilium_helm_repository"></a> [cilium\_helm\_repository](#input\_cilium\_helm\_repository) | URL of the Helm repository where the Cilium chart is located. | `string` | `"https://helm.cilium.io"` | no |
 | <a name="input_cilium_helm_values"></a> [cilium\_helm\_values](#input\_cilium\_helm\_values) | Custom Helm values for the Cilium chart deployment. These values will merge with and will override the default values provided by the Cilium Helm chart. | `any` | `{}` | no |
-| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.18.10"` | no |
+| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.18.11"` | no |
 | <a name="input_cilium_hubble_enabled"></a> [cilium\_hubble\_enabled](#input\_cilium\_hubble\_enabled) | Enables Hubble observability within Cilium, which may impact performance with an overhead of 1-15% depending on network traffic patterns and settings. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_relay_enabled"></a> [cilium\_hubble\_relay\_enabled](#input\_cilium\_hubble\_relay\_enabled) | Enables Hubble Relay, which requires Hubble to be enabled. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_ui_enabled"></a> [cilium\_hubble\_ui\_enabled](#input\_cilium\_hubble\_ui\_enabled) | Enables the Hubble UI, which requires Hubble Relay to be enabled. | `bool` | `false` | no |
@@ -910,7 +910,7 @@ No modules.
 | <a name="input_metrics_server_helm_chart"></a> [metrics\_server\_helm\_chart](#input\_metrics\_server\_helm\_chart) | Name of the Helm chart used for deploying Metrics Server. | `string` | `"metrics-server"` | no |
 | <a name="input_metrics_server_helm_repository"></a> [metrics\_server\_helm\_repository](#input\_metrics\_server\_helm\_repository) | URL of the Helm repository where the Metrics Server chart is located. | `string` | `"https://kubernetes-sigs.github.io/metrics-server"` | no |
 | <a name="input_metrics_server_helm_values"></a> [metrics\_server\_helm\_values](#input\_metrics\_server\_helm\_values) | Custom Helm values for the Metrics Server chart deployment. These values will merge with and will override the default values provided by the Metrics Server Helm chart. | `any` | `{}` | no |
-| <a name="input_metrics_server_helm_version"></a> [metrics\_server\_helm\_version](#input\_metrics\_server\_helm\_version) | Version of the Metrics Server Helm chart to deploy. | `string` | `"3.13.0"` | no |
+| <a name="input_metrics_server_helm_version"></a> [metrics\_server\_helm\_version](#input\_metrics\_server\_helm\_version) | Version of the Metrics Server Helm chart to deploy. | `string` | `"3.13.1"` | no |
 | <a name="input_metrics_server_replicas"></a> [metrics\_server\_replicas](#input\_metrics\_server\_replicas) | Specifies the number of replicas for the Metrics Server. Depending on the node pool size, a default of 1 or 2 is used if not explicitly set. | `number` | `null` | no |
 | <a name="input_metrics_server_schedule_on_control_plane"></a> [metrics\_server\_schedule\_on\_control\_plane](#input\_metrics\_server\_schedule\_on\_control\_plane) | Determines whether to schedule the Metrics Server on control plane nodes. Defaults to 'true' if there are no configured worker nodes. | `bool` | `null` | no |
 | <a name="input_network_ipv4_cidr"></a> [network\_ipv4\_cidr](#input\_network\_ipv4\_cidr) | Specifies the main IPv4 CIDR block for the network. This CIDR block is used to allocate IP addresses within the network. | `string` | `"10.0.0.0/16"` | no |
@@ -927,7 +927,7 @@ No modules.
 | <a name="input_oidc_username_claim"></a> [oidc\_username\_claim](#input\_oidc\_username\_claim) | JWT claim to use as the username | `string` | `"sub"` | no |
 | <a name="input_piraeus_enabled"></a> [piraeus\_enabled](#input\_piraeus\_enabled) | Prepares the cluster for Piraeus/LINSTOR storage: adds DRBD extension to the Talos image, loads DRBD kernel modules, and provisions a dedicated storage disk on worker nodes. The actual Piraeus Operator must be installed separately (e.g. via ArgoCD). | `bool` | `false` | no |
 | <a name="input_prometheus_operator_crds_enabled"></a> [prometheus\_operator\_crds\_enabled](#input\_prometheus\_operator\_crds\_enabled) | Enables the Prometheus Operator Custom Resource Definitions (CRDs) deployment. | `bool` | `true` | no |
-| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.91.0"` | no |
+| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.92.0"` | no |
 | <a name="input_proxmox_ccm_api_insecure"></a> [proxmox\_ccm\_api\_insecure](#input\_proxmox\_ccm\_api\_insecure) | Allow insecure TLS connections to the Proxmox API. | `bool` | `true` | no |
 | <a name="input_proxmox_ccm_api_url"></a> [proxmox\_ccm\_api\_url](#input\_proxmox\_ccm\_api\_url) | Proxmox API URL for the CCM. If not set, derived from proxmox\_node (https://<proxmox\_node>:8006/api2/json). | `string` | `null` | no |
 | <a name="input_proxmox_ccm_enabled"></a> [proxmox\_ccm\_enabled](#input\_proxmox\_ccm\_enabled) | Enables the Proxmox Cloud Controller Manager. Manages node lifecycle (automatic cleanup of deleted nodes) and sets provider-specific labels. A dedicated Proxmox API user and token are automatically provisioned. | `bool` | `true` | no |
@@ -989,7 +989,7 @@ No modules.
 | <a name="input_talos_upgrade_insecure"></a> [talos\_upgrade\_insecure](#input\_talos\_upgrade\_insecure) | Upgrade using the insecure (no auth) maintenance service. | `bool` | `false` | no |
 | <a name="input_talos_upgrade_reboot_mode"></a> [talos\_upgrade\_reboot\_mode](#input\_talos\_upgrade\_reboot\_mode) | Select the reboot mode during upgrade. Mode "powercycle" bypasses kexec. Valid values: "default" or "powercycle". | `string` | `null` | no |
 | <a name="input_talos_upgrade_stage"></a> [talos\_upgrade\_stage](#input\_talos\_upgrade\_stage) | Stage the Talos upgrade to perform it after a reboot. | `bool` | `false` | no |
-| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.12.7"` | no |
+| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.12.9"` | no |
 | <a name="input_talosctl_retries"></a> [talosctl\_retries](#input\_talosctl\_retries) | Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability. | `number` | `100` | no |
 | <a name="input_talosctl_version_check_enabled"></a> [talosctl\_version\_check\_enabled](#input\_talosctl\_version\_check\_enabled) | Controls whether a preflight check verifies the local talosctl client version before provisioning. | `bool` | `true` | no |
 | <a name="input_worker_config_patches"></a> [worker\_config\_patches](#input\_worker\_config\_patches) | List of configuration patches applied to the Worker nodes. | `any` | `[]` | no |

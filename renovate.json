@@ -19,11 +19,17 @@
       "minimumReleaseAge": "14 days"
     },
     {
-      "description": "Stability: Kubernetes — block minor/major updates",
-      "matchDatasources": ["github-tags"],
+      "description": "Stability: Kubernetes — only allow current and next minor stream",
+      "matchDatasources": ["github-tags", "github-releases"],
+      "matchDepNames": ["kubernetes/kubernetes"],
+      "allowedVersions": "<{{major}}.{{add minor 2}}.0"
+    },
+    {
+      "description": "Stability: Kubernetes — require dashboard approval for minor/major updates",
+      "matchDatasources": ["github-tags", "github-releases"],
       "matchDepNames": ["kubernetes/kubernetes"],
       "matchUpdateTypes": ["minor", "major"],
-      "enabled": false
+      "dependencyDashboardApproval": true
     },
     {
       "description": "Stability: Skip X.Y.0 releases",

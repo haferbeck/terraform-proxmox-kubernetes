@@ -269,7 +269,7 @@ variable "worker_config_patches" {
 # Talos
 variable "talos_version" {
   type        = string
-  default     = "v1.12.7" # https://github.com/siderolabs/talos
+  default     = "v1.12.9" # https://github.com/siderolabs/talos
   description = "Specifies the version of Talos to be used in generated machine configurations."
 }
 
@@ -1035,7 +1035,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.18.10"
+  default     = "1.18.11"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
@@ -1242,7 +1242,7 @@ variable "metrics_server_helm_chart" {
 
 variable "metrics_server_helm_version" {
   type        = string
-  default     = "3.13.0"
+  default     = "3.13.1"
   description = "Version of the Metrics Server Helm chart to deploy."
 }
 
@@ -1337,6 +1337,6 @@ variable "prometheus_operator_crds_enabled" {
 
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.91.0" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.92.0" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }
