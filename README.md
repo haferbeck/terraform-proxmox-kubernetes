@@ -582,7 +582,7 @@ Enable or disable component deployment:
 # Core Components (enabled by default)
 cilium_enabled                   = true
 proxmox_ccm_enabled              = true
-talos_backup_s3_enabled          = true
+talos_backup_enabled             = true
 talos_ccm_enabled                = true
 talos_coredns_enabled            = true
 metrics_server_enabled           = true
@@ -864,7 +864,7 @@ No modules.
 | <a name="input_cilium_helm_chart"></a> [cilium\_helm\_chart](#input\_cilium\_helm\_chart) | Name of the Helm chart used for deploying Cilium. | `string` | `"cilium"` | no |
 | <a name="input_cilium_helm_repository"></a> [cilium\_helm\_repository](#input\_cilium\_helm\_repository) | URL of the Helm repository where the Cilium chart is located. | `string` | `"https://helm.cilium.io"` | no |
 | <a name="input_cilium_helm_values"></a> [cilium\_helm\_values](#input\_cilium\_helm\_values) | Custom Helm values for the Cilium chart deployment. These values will merge with and will override the default values provided by the Cilium Helm chart. | `any` | `{}` | no |
-| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.18.11"` | no |
+| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.19.5"` | no |
 | <a name="input_cilium_hubble_enabled"></a> [cilium\_hubble\_enabled](#input\_cilium\_hubble\_enabled) | Enables Hubble observability within Cilium, which may impact performance with an overhead of 1-15% depending on network traffic patterns and settings. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_relay_enabled"></a> [cilium\_hubble\_relay\_enabled](#input\_cilium\_hubble\_relay\_enabled) | Enables Hubble Relay, which requires Hubble to be enabled. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_ui_enabled"></a> [cilium\_hubble\_ui\_enabled](#input\_cilium\_hubble\_ui\_enabled) | Enables the Hubble UI, which requires Hubble Relay to be enabled. | `bool` | `false` | no |
@@ -899,7 +899,7 @@ No modules.
 | <a name="input_kubernetes_kubelet_image"></a> [kubernetes\_kubelet\_image](#input\_kubernetes\_kubelet\_image) | Specifies a custom image repository for the kubelet (e.g., 'my-registry.io/kubelet'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_proxy_image"></a> [kubernetes\_proxy\_image](#input\_kubernetes\_proxy\_image) | Specifies a custom image repository for kube-proxy (e.g., 'my-registry.io/kube-proxy'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_scheduler_image"></a> [kubernetes\_scheduler\_image](#input\_kubernetes\_scheduler\_image) | Specifies a custom image repository for kube-scheduler (e.g., 'my-registry.io/kube-scheduler'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
-| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Specifies the Kubernetes version to deploy. | `string` | `"v1.33.12"` | no |
+| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Specifies the Kubernetes version to deploy. | `string` | `"v1.34.9"` | no |
 | <a name="input_longhorn_default_storage_class"></a> [longhorn\_default\_storage\_class](#input\_longhorn\_default\_storage\_class) | Set Longhorn as the default storage class. | `bool` | `false` | no |
 | <a name="input_longhorn_enabled"></a> [longhorn\_enabled](#input\_longhorn\_enabled) | Enable or disable Longhorn integration | `bool` | `false` | no |
 | <a name="input_longhorn_helm_chart"></a> [longhorn\_helm\_chart](#input\_longhorn\_helm\_chart) | Name of the Helm chart used for deploying Longhorn. | `string` | `"longhorn"` | no |
@@ -944,9 +944,9 @@ No modules.
 | <a name="input_rbac_roles"></a> [rbac\_roles](#input\_rbac\_roles) | List of custom Kubernetes roles to create | <pre>list(object({<br/>    name      = string<br/>    namespace = string<br/>    rules = list(object({<br/>      api_groups = list(string)<br/>      resources  = list(string)<br/>      verbs      = list(string)<br/>    }))<br/>  }))</pre> | `[]` | no |
 | <a name="input_talos_backup_age_x25519_public_key"></a> [talos\_backup\_age\_x25519\_public\_key](#input\_talos\_backup\_age\_x25519\_public\_key) | AGE X25519 Public Key for client side Talos Backup encryption. | `string` | `null` | no |
 | <a name="input_talos_backup_enable_compression"></a> [talos\_backup\_enable\_compression](#input\_talos\_backup\_enable\_compression) | Enable ETCD snapshot compression with zstd algorithm. | `bool` | `false` | no |
+| <a name="input_talos_backup_enabled"></a> [talos\_backup\_enabled](#input\_talos\_backup\_enabled) | Enable Talos Backup cronjob. | `bool` | `true` | no |
 | <a name="input_talos_backup_s3_access_key"></a> [talos\_backup\_s3\_access\_key](#input\_talos\_backup\_s3\_access\_key) | S3 Access Key for Talos Backup. | `string` | `""` | no |
 | <a name="input_talos_backup_s3_bucket"></a> [talos\_backup\_s3\_bucket](#input\_talos\_backup\_s3\_bucket) | S3 bucket name for Talos Backup. | `string` | `null` | no |
-| <a name="input_talos_backup_s3_enabled"></a> [talos\_backup\_s3\_enabled](#input\_talos\_backup\_s3\_enabled) | Enable Talos etcd S3 backup cronjob. | `bool` | `true` | no |
 | <a name="input_talos_backup_s3_endpoint"></a> [talos\_backup\_s3\_endpoint](#input\_talos\_backup\_s3\_endpoint) | S3 endpoint for Talos Backup. | `string` | `null` | no |
 | <a name="input_talos_backup_s3_path_style"></a> [talos\_backup\_s3\_path\_style](#input\_talos\_backup\_s3\_path\_style) | Use path style S3 for Talos Backup. Set this to false if you have another s3 like endpoint such as minio. | `bool` | `false` | no |
 | <a name="input_talos_backup_s3_prefix"></a> [talos\_backup\_s3\_prefix](#input\_talos\_backup\_s3\_prefix) | S3 prefix for Talos Backup. | `string` | `null` | no |
@@ -989,7 +989,7 @@ No modules.
 | <a name="input_talos_upgrade_insecure"></a> [talos\_upgrade\_insecure](#input\_talos\_upgrade\_insecure) | Upgrade using the insecure (no auth) maintenance service. | `bool` | `false` | no |
 | <a name="input_talos_upgrade_reboot_mode"></a> [talos\_upgrade\_reboot\_mode](#input\_talos\_upgrade\_reboot\_mode) | Select the reboot mode during upgrade. Mode "powercycle" bypasses kexec. Valid values: "default" or "powercycle". | `string` | `null` | no |
 | <a name="input_talos_upgrade_stage"></a> [talos\_upgrade\_stage](#input\_talos\_upgrade\_stage) | Stage the Talos upgrade to perform it after a reboot. | `bool` | `false` | no |
-| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.12.9"` | no |
+| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.13.4"` | no |
 | <a name="input_talosctl_retries"></a> [talosctl\_retries](#input\_talosctl\_retries) | Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability. | `number` | `100` | no |
 | <a name="input_talosctl_version_check_enabled"></a> [talosctl\_version\_check\_enabled](#input\_talosctl\_version\_check\_enabled) | Controls whether a preflight check verifies the local talosctl client version before provisioning. | `bool` | `true` | no |
 | <a name="input_worker_config_patches"></a> [worker\_config\_patches](#input\_worker\_config\_patches) | List of configuration patches applied to the Worker nodes. | `any` | `[]` | no |

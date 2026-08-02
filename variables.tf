@@ -269,7 +269,7 @@ variable "worker_config_patches" {
 # Talos
 variable "talos_version" {
   type        = string
-  default     = "v1.12.9" # https://github.com/siderolabs/talos
+  default     = "v1.13.4" # https://github.com/siderolabs/talos
   description = "Specifies the version of Talos to be used in generated machine configurations."
 }
 
@@ -587,10 +587,10 @@ variable "talos_backup_version" {
   description = "Specifies the version of Talos Backup to be used in generated machine configurations."
 }
 
-variable "talos_backup_s3_enabled" {
+variable "talos_backup_enabled" {
   type        = bool
   default     = true
-  description = "Enable Talos etcd S3 backup cronjob."
+  description = "Enable Talos Backup cronjob."
 }
 
 variable "talos_backup_s3_region" {
@@ -659,7 +659,7 @@ variable "talos_backup_schedule" {
 # Kubernetes
 variable "kubernetes_version" {
   type        = string
-  default     = "v1.33.12" # https://github.com/kubernetes/kubernetes
+  default     = "v1.34.9" # https://github.com/kubernetes/kubernetes
   description = "Specifies the Kubernetes version to deploy."
 }
 
@@ -1035,7 +1035,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.18.11"
+  default     = "1.19.5"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
