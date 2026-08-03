@@ -5,7 +5,7 @@
 # helpful message instead of letting the Proxmox API reject mid-apply.
 
 # Datastores per Proxmox host referenced by any nodepool (or var.proxmox_node).
-data "proxmox_virtual_environment_datastores" "preflight" {
+data "proxmox_datastores" "preflight" {
   for_each  = toset(local.proxmox_target_nodes)
   node_name = each.value
 }
@@ -25,7 +25,7 @@ resource "terraform_data" "preflight" {
     precondition {
       condition = alltrue([
         for n in local.proxmox_target_nodes :
-        contains(data.proxmox_virtual_environment_datastores.preflight[n].datastores[*].id, var.proxmox_disk_storage)
+        contains(data.proxmox_datastores.preflight[n].datastores[*].id, var.proxmox_disk_storage)
       ])
       error_message = "var.proxmox_disk_storage = '${var.proxmox_disk_storage}' was not found on one or more target Proxmox hosts (${join(", ", local.proxmox_target_nodes)}). Verify the storage pool exists on every host that hosts a nodepool."
     }
@@ -33,7 +33,7 @@ resource "terraform_data" "preflight" {
     precondition {
       condition = alltrue([
         for n in local.proxmox_target_nodes :
-        contains(data.proxmox_virtual_environment_datastores.preflight[n].datastores[*].id, var.proxmox_image_storage)
+        contains(data.proxmox_datastores.preflight[n].datastores[*].id, var.proxmox_image_storage)
       ])
       error_message = "var.proxmox_image_storage = '${var.proxmox_image_storage}' was not found on one or more target Proxmox hosts (${join(", ", local.proxmox_target_nodes)}). Verify the storage pool exists on every host that hosts a nodepool."
     }

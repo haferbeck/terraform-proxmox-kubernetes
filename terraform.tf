@@ -8,8 +8,10 @@ terraform {
     }
 
     proxmox = {
-      source  = "bpg/proxmox"
-      version = ">= 0.89.0"
+      source = "bpg/proxmox"
+      # 0.100.0 introduced the short `proxmox_*` type names used here
+      # (download_file, user_token, datastores).
+      version = ">= 0.100.0"
     }
 
     helm = {
