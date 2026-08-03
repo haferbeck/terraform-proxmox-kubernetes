@@ -778,7 +778,7 @@ variable "talos_ccm_helm_chart" {
 
 variable "talos_ccm_helm_version" {
   type        = string
-  default     = "0.5.5"
+  default     = "0.5.6"
   description = "Helm chart version for the Talos CCM."
 }
 
@@ -828,7 +828,7 @@ variable "proxmox_ccm_helm_chart" {
 
 variable "proxmox_ccm_helm_version" {
   type        = string
-  default     = "0.2.27"
+  default     = "0.2.29"
   description = "Helm chart version for the Proxmox CCM."
 }
 
