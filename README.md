@@ -114,7 +114,7 @@ Every release is deployed and upgraded in place on the maintainer's reference cl
 | | |
 |---|---|
 | Proxmox VE | 8.4.18, **single standalone host** (no Proxmox cluster, no shared storage) |
-| Topology | 1 control plane + 3 workers, non-HA (single-CP, no etcd quorum) |
+| Topology | 1 control plane + 3 workers as the steady state; multi-control-plane setups exercised during testing |
 | Storage | LVM-Thin (`local-lvm`) for VM disks, Directory (`local`) for the Talos ISO, plus one dedicated raw disk per worker |
 | Network | one Linux bridge with a VLAN tag, addresses assigned via cloud-init, Kubernetes API on the Talos Layer2 VIP |
 | Enabled options | Piraeus node preparation, Cilium L2 Announcements, extra Talos image extension, `staged_if_needing_reboot` apply mode, WireGuard encryption and LUKS2 partition encryption (defaults) |
@@ -132,7 +132,13 @@ Version combinations exercised so far:
 
 Each of these was reached as an in-place rolling upgrade from the previous row, including Talos minor and Kubernetes minor transitions — not a fresh deployment.
 
-**Not covered by these tests.** Treat the following as untested rather than unsupported: multi-host Proxmox clusters and per-nodepool host placement, multi-control-plane / HA setups, Longhorn, cert-manager, Ingress via Gateway API CRDs deployed by this module, IPsec instead of WireGuard, IPv6, OIDC, and Talos Backup to S3 (the manifest is deployed but the CronJob stays suspended while no bucket is configured). Reports and fixes for these paths are welcome.
+Lifecycle operations exercised beyond upgrades:
+
+- Multi-control-plane clusters, including scaling control planes up and back down one step at a time
+- Scaling worker nodepools up and down
+- Changing `talos_image_extensions` and toggling `piraeus_enabled` on a running cluster — the resulting schematic change is rolled out by `talosctl upgrade` on the existing nodes (see [Changing the Talos image after deployment](#changing-the-talos-image-after-deployment))
+
+**Not covered by these tests.** Treat the following as untested rather than unsupported: multi-host Proxmox clusters and per-nodepool host placement, Longhorn, cert-manager, Ingress via Gateway API CRDs deployed by this module, IPsec instead of WireGuard, IPv6, OIDC, and Talos Backup to S3 (the manifest is deployed but the CronJob stays suspended while no bucket is configured). Reports and fixes for these paths are welcome.
 
 ## Getting Started
 
@@ -774,9 +780,24 @@ Set `talos_staged_configuration_automatic_reboot_enabled = false` to stage chang
 
 ## Known Issues
 
-### Talos Image Extensions should be set at first deploy
+### Changing the Talos image after deployment
 
-Settings that affect the Talos base image (e.g. `talos_image_extensions`, `piraeus_enabled`, `longhorn_enabled`) result in a different ISO being downloaded. It is recommended to decide on these before the initial cluster deployment. Changing them later requires re-downloading the ISO and may require node reprovisioning.
+Settings that affect the Talos base image (`talos_image_extensions`, `piraeus_enabled`, `longhorn_enabled`) change the Image Factory schematic ID. What happens then:
+
+- `proxmox_download_file.talos_image` is replaced — a new ISO is downloaded. It is the boot source for **newly created** VMs only.
+- `terraform_data.upgrade_control_plane` and `upgrade_worker` are replaced, because the schematic ID is one of their triggers. They run `talosctl upgrade` against the new installer image, so the existing nodes pick up the changed extensions through a rolling in-place upgrade with a reboot per node — the same path as a Talos version bump.
+- The node VMs are **not** replaced. `disk[0].file_id` is under `ignore_changes`, so the changed ISO reference does not propagate to existing VMs.
+
+So extensions can be added or removed on a running cluster. Budget for a rolling reboot of every node, and on a single-control-plane cluster for an API server outage while the control plane reboots.
+
+### What forces a node VM to be replaced
+
+Most changes are applied in place, but some nodepool attributes are part of the VM's identity and cause `proxmox_virtual_environment_vm` to be destroyed and recreated:
+
+- **`proxmox_node`** — the bpg provider re-creates a VM on node change unless its `migrate` option is set, which this module does not set.
+- **`ip_offset`** — the VM ID is derived from it (`vm_id_base + ip_offset + node_index`), and changing the VM ID replaces the VM.
+
+A replaced worker is drained and rejoins; with enough remaining workers this is disruptive but recoverable. A replaced **single** control plane loses etcd and therefore the cluster. Check the plan for `-/+ proxmox_virtual_environment_vm` before applying, and scale to multiple control planes first if you need to move or renumber them.
 
 ### Manifest changes may require manual sync
 
