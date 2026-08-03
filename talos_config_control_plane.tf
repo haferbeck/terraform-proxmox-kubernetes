@@ -169,7 +169,7 @@ data "talos_machine_configuration" "control_plane" {
   examples           = false
 
   config_patches = concat(
-    [for patch in local.talos_base_config_patches : yamlencode(patch)],
+    [for patch in local.talos_cloud_config_patches : yamlencode(patch)],
     [for patch in local.control_plane_talos_config_patches[each.key] : yamlencode(patch)],
     [for patch in var.control_plane_config_patches : yamlencode(patch)]
   )

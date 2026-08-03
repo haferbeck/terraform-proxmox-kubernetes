@@ -153,14 +153,10 @@ locals {
     },
   ]) : tolist([])
 
-  # Talos Base Config
-  talos_base_config_patches = concat(
+  # Talos Common Config — platform-independent patches
+  talos_common_config_patches = concat(
     [{
       machine = {
-        install = {
-          image           = local.talos_installer_image_url
-          extraKernelArgs = var.talos_extra_kernel_args
-        }
         certSANs = local.talos_certificate_san
         kubelet = merge(
           {
@@ -230,5 +226,22 @@ locals {
     [local.talos_time_sync_config_patch],
     local.talos_static_host_config_patches,
     local.talos_trusted_certs_config_patches
+  )
+
+  # Talos Cloud Config — patches specific to VM nodes. Upstream splits cloud
+  # vs bare metal here; the port only provisions Proxmox VMs, so this is the
+  # single platform variant. Name kept for upstream diff parity.
+  talos_cloud_config_patches = concat(
+    local.talos_common_config_patches,
+    [
+      {
+        machine = {
+          install = {
+            image           = local.talos_installer_image_url
+            extraKernelArgs = var.talos_extra_kernel_args
+          }
+        }
+      }
+    ]
   )
 }

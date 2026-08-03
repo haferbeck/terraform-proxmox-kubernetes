@@ -32,7 +32,6 @@ locals {
     talos_upgrade_reboot_mode           = var.talos_upgrade_reboot_mode
     talos_reboot_debug                  = var.talos_reboot_debug
     talos_reboot_mode                   = var.talos_reboot_mode
-    talos_installer_image_url           = local.talos_installer_image_url
     talosctl_retries                    = var.talosctl_retries
     healthcheck_enabled                 = var.cluster_healthcheck_enabled
     talos_primary_node                  = local.talos_primary_node_ip
@@ -85,6 +84,7 @@ resource "terraform_data" "upgrade_control_plane" {
       "set -eu",
       local.talosctl_commands,
       "printf '%s\\n' \"Start upgrading Control Plane Nodes\"",
+      "talos_wait_for_health",
       templatefile("${path.module}/templates/talos_upgrade.sh.tftpl", {
         upgrade_nodes      = local.control_plane_ips
         talos_version      = var.talos_version
@@ -94,7 +94,8 @@ resource "terraform_data" "upgrade_control_plane" {
     ]) : "printf '%s\\n' \"Cluster not initialized, skipping Control Plane Node upgrade\""
 
     environment = {
-      TALOSCONFIG = nonsensitive(data.talos_client_configuration.this.talos_config)
+      TALOSCONFIG         = nonsensitive(data.talos_client_configuration.this.talos_config)
+      TALOS_UPGRADE_IMAGE = local.talos_installer_image_url
     }
   }
 
@@ -118,6 +119,7 @@ resource "terraform_data" "upgrade_worker" {
       "set -eu",
       local.talosctl_commands,
       "printf '%s\\n' \"Start upgrading Worker Nodes\"",
+      "talos_wait_for_health",
       templatefile("${path.module}/templates/talos_upgrade.sh.tftpl", {
         upgrade_nodes      = local.worker_ips
         talos_version      = var.talos_version
@@ -127,7 +129,8 @@ resource "terraform_data" "upgrade_worker" {
     ]) : "printf '%s\\n' \"Cluster not initialized, skipping Worker Node upgrade\""
 
     environment = {
-      TALOSCONFIG = nonsensitive(data.talos_client_configuration.this.talos_config)
+      TALOSCONFIG         = nonsensitive(data.talos_client_configuration.this.talos_config)
+      TALOS_UPGRADE_IMAGE = local.talos_installer_image_url
     }
   }
 
