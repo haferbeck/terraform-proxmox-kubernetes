@@ -723,14 +723,18 @@ Control how machine configuration changes are applied:
 talos_machine_configuration_apply_mode = "auto"  # auto | reboot | no_reboot | staged | staged_if_needing_reboot
 ```
 
-> **Warning:** The default mode `auto` applies changes immediately and reboots nodes if required. For changes that trigger a reboot (e.g. CPU/memory changes), all affected nodes may reboot simultaneously, causing downtime. For production clusters, use `staged` mode to perform rolling reboots with health checks:
+> **Warning:** The default mode `auto` applies changes immediately and reboots nodes if required. For changes that trigger a reboot (e.g. CPU/memory changes), all affected nodes may reboot simultaneously, causing downtime. For production clusters, use `staged_if_needing_reboot` to get rolling reboots with health checks:
 
 ```hcl
-talos_machine_configuration_apply_mode              = "staged"
-talos_staged_configuration_automatic_reboot_enabled = true
+talos_machine_configuration_apply_mode              = "staged_if_needing_reboot"
+talos_staged_configuration_automatic_reboot_enabled = true # default
 ```
 
-This stages the configuration and reboots nodes one at a time, waiting for the cluster to be healthy between each reboot.
+This performs a dry-run per node: changes that need a reboot are staged and the nodes are then rebooted one at a time, waiting for the cluster to become healthy in between. Changes that do not need a reboot are applied live, as in `auto` mode.
+
+Plain `staged` behaves differently: **every** configuration change is staged, so every affected node is rebooted even when the change would have applied live — for example a Kubernetes patch bump or a changed inline manifest. On clusters with a single control plane that reboot is an API server outage, so prefer `staged_if_needing_reboot` unless you deliberately want a reboot on every change.
+
+Set `talos_staged_configuration_automatic_reboot_enabled = false` to stage changes without rebooting; the nodes then pick up the staged configuration at their next reboot, whenever that happens.
 
 ### Scaling
 
@@ -851,7 +855,7 @@ No modules.
 | <a name="input_cert_manager_helm_chart"></a> [cert\_manager\_helm\_chart](#input\_cert\_manager\_helm\_chart) | Name of the Helm chart used for deploying Cert Manager. | `string` | `"cert-manager"` | no |
 | <a name="input_cert_manager_helm_repository"></a> [cert\_manager\_helm\_repository](#input\_cert\_manager\_helm\_repository) | URL of the Helm repository where the Cert Manager chart is located. | `string` | `"https://charts.jetstack.io"` | no |
 | <a name="input_cert_manager_helm_values"></a> [cert\_manager\_helm\_values](#input\_cert\_manager\_helm\_values) | Custom Helm values for the Cert Manager chart deployment. These values will merge with and will override the default values provided by the Cert Manager Helm chart. | `any` | `{}` | no |
-| <a name="input_cert_manager_helm_version"></a> [cert\_manager\_helm\_version](#input\_cert\_manager\_helm\_version) | Version of the Cert Manager Helm chart to deploy. | `string` | `"v1.20.2"` | no |
+| <a name="input_cert_manager_helm_version"></a> [cert\_manager\_helm\_version](#input\_cert\_manager\_helm\_version) | Version of the Cert Manager Helm chart to deploy. | `string` | `"v1.20.3"` | no |
 | <a name="input_cilium_bpf_datapath_mode"></a> [cilium\_bpf\_datapath\_mode](#input\_cilium\_bpf\_datapath\_mode) | Mode for Pod devices for the core datapath. Allowed values: veth, netkit, netkit-l2. Warning: Netkit is still in beta and should not be used together with IPsec encryption! | `string` | `"veth"` | no |
 | <a name="input_cilium_bpf_host_legacy_routing"></a> [cilium\_bpf\_host\_legacy\_routing](#input\_cilium\_bpf\_host\_legacy\_routing) | Explicitly enable or disable Cilium's legacy host routing. When omitted, the value is automatically determined and only set to `true` if necessary, for example when IPSec is enabled. | `bool` | `null` | no |
 | <a name="input_cilium_egress_gateway_enabled"></a> [cilium\_egress\_gateway\_enabled](#input\_cilium\_egress\_gateway\_enabled) | Enables egress gateway to redirect and SNAT the traffic that leaves the cluster. | `bool` | `false` | no |
@@ -905,7 +909,7 @@ No modules.
 | <a name="input_longhorn_helm_chart"></a> [longhorn\_helm\_chart](#input\_longhorn\_helm\_chart) | Name of the Helm chart used for deploying Longhorn. | `string` | `"longhorn"` | no |
 | <a name="input_longhorn_helm_repository"></a> [longhorn\_helm\_repository](#input\_longhorn\_helm\_repository) | URL of the Helm repository where the Longhorn chart is located. | `string` | `"https://charts.longhorn.io"` | no |
 | <a name="input_longhorn_helm_values"></a> [longhorn\_helm\_values](#input\_longhorn\_helm\_values) | Custom Helm values for the Longhorn chart deployment. These values will merge with and will override the default values provided by the Longhorn Helm chart. | `any` | `{}` | no |
-| <a name="input_longhorn_helm_version"></a> [longhorn\_helm\_version](#input\_longhorn\_helm\_version) | Version of the Longhorn Helm chart to deploy. | `string` | `"1.11.2"` | no |
+| <a name="input_longhorn_helm_version"></a> [longhorn\_helm\_version](#input\_longhorn\_helm\_version) | Version of the Longhorn Helm chart to deploy. | `string` | `"1.11.3"` | no |
 | <a name="input_metrics_server_enabled"></a> [metrics\_server\_enabled](#input\_metrics\_server\_enabled) | Enables the the Kubernetes Metrics Server. | `bool` | `true` | no |
 | <a name="input_metrics_server_helm_chart"></a> [metrics\_server\_helm\_chart](#input\_metrics\_server\_helm\_chart) | Name of the Helm chart used for deploying Metrics Server. | `string` | `"metrics-server"` | no |
 | <a name="input_metrics_server_helm_repository"></a> [metrics\_server\_helm\_repository](#input\_metrics\_server\_helm\_repository) | URL of the Helm repository where the Metrics Server chart is located. | `string` | `"https://kubernetes-sigs.github.io/metrics-server"` | no |
@@ -927,7 +931,7 @@ No modules.
 | <a name="input_oidc_username_claim"></a> [oidc\_username\_claim](#input\_oidc\_username\_claim) | JWT claim to use as the username | `string` | `"sub"` | no |
 | <a name="input_piraeus_enabled"></a> [piraeus\_enabled](#input\_piraeus\_enabled) | Prepares the cluster for Piraeus/LINSTOR storage: adds DRBD extension to the Talos image, loads DRBD kernel modules, and provisions a dedicated storage disk on worker nodes. The actual Piraeus Operator must be installed separately (e.g. via ArgoCD). | `bool` | `false` | no |
 | <a name="input_prometheus_operator_crds_enabled"></a> [prometheus\_operator\_crds\_enabled](#input\_prometheus\_operator\_crds\_enabled) | Enables the Prometheus Operator Custom Resource Definitions (CRDs) deployment. | `bool` | `true` | no |
-| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.92.0"` | no |
+| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.92.1"` | no |
 | <a name="input_proxmox_ccm_api_insecure"></a> [proxmox\_ccm\_api\_insecure](#input\_proxmox\_ccm\_api\_insecure) | Allow insecure TLS connections to the Proxmox API. | `bool` | `true` | no |
 | <a name="input_proxmox_ccm_api_url"></a> [proxmox\_ccm\_api\_url](#input\_proxmox\_ccm\_api\_url) | Proxmox API URL for the CCM. If not set, derived from proxmox\_node (https://<proxmox\_node>:8006/api2/json). | `string` | `null` | no |
 | <a name="input_proxmox_ccm_enabled"></a> [proxmox\_ccm\_enabled](#input\_proxmox\_ccm\_enabled) | Enables the Proxmox Cloud Controller Manager. Manages node lifecycle (automatic cleanup of deleted nodes) and sets provider-specific labels. A dedicated Proxmox API user and token are automatically provisioned. | `bool` | `true` | no |
@@ -958,7 +962,7 @@ No modules.
 | <a name="input_talos_ccm_helm_chart"></a> [talos\_ccm\_helm\_chart](#input\_talos\_ccm\_helm\_chart) | Helm chart name for the Talos CCM. | `string` | `"talos-cloud-controller-manager"` | no |
 | <a name="input_talos_ccm_helm_repository"></a> [talos\_ccm\_helm\_repository](#input\_talos\_ccm\_helm\_repository) | Helm repository for the Talos CCM chart. | `string` | `"oci://ghcr.io/siderolabs/charts"` | no |
 | <a name="input_talos_ccm_helm_values"></a> [talos\_ccm\_helm\_values](#input\_talos\_ccm\_helm\_values) | Custom Helm values for the Talos CCM chart. | `any` | `{}` | no |
-| <a name="input_talos_ccm_helm_version"></a> [talos\_ccm\_helm\_version](#input\_talos\_ccm\_helm\_version) | Helm chart version for the Talos CCM. | `string` | `"0.5.4"` | no |
+| <a name="input_talos_ccm_helm_version"></a> [talos\_ccm\_helm\_version](#input\_talos\_ccm\_helm\_version) | Helm chart version for the Talos CCM. | `string` | `"0.5.5"` | no |
 | <a name="input_talos_certificates"></a> [talos\_certificates](#input\_talos\_certificates) | Additional trusted CA certificates to be added to the Talos configuration.<br/>Map keys are used as names for the TrustedRootsConfig documents.<br/>Values can be either a single PEM-encoded string containing one or more certificates (inline or from file), or a list of PEM-encoded strings.<br/><br/>Example:<pre>hcl<br/>talos_certificates = {<br/>  # Inline string (single certificate)<br/>  "inline-ca" = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"<br/><br/>  # Single certificate from file<br/>  "file-ca" = [file("ca.crt")]<br/><br/>  # Multiple certificates from files (chain)<br/>  "corporate-chain" = [file("root.crt"), file("intermediate.crt")]<br/><br/>  # Multiple inline certificates in a single string (backward compatible)<br/>  "legacy-ca" = <<-EOT<br/>    -----BEGIN CERTIFICATE-----<br/>    ...<br/>    -----END CERTIFICATE-----<br/>    -----BEGIN CERTIFICATE-----<br/>    ...<br/>    -----END CERTIFICATE-----<br/>  EOT<br/>}</pre> | `any` | `{}` | no |
 | <a name="input_talos_coredns_enabled"></a> [talos\_coredns\_enabled](#input\_talos\_coredns\_enabled) | Determines whether CoreDNS is enabled in the Talos cluster. When enabled, CoreDNS serves as the primary DNS service provider in Kubernetes. | `bool` | `true` | no |
 | <a name="input_talos_discovery_kubernetes_enabled"></a> [talos\_discovery\_kubernetes\_enabled](#input\_talos\_discovery\_kubernetes\_enabled) | Enable or disable Kubernetes-based Talos discovery service. Deprecated as of Kubernetes v1.32, where the AuthorizeNodeWithSelectors feature gate is enabled by default. | `bool` | `false` | no |
@@ -989,7 +993,7 @@ No modules.
 | <a name="input_talos_upgrade_insecure"></a> [talos\_upgrade\_insecure](#input\_talos\_upgrade\_insecure) | Upgrade using the insecure (no auth) maintenance service. | `bool` | `false` | no |
 | <a name="input_talos_upgrade_reboot_mode"></a> [talos\_upgrade\_reboot\_mode](#input\_talos\_upgrade\_reboot\_mode) | Select the reboot mode during upgrade. Mode "powercycle" bypasses kexec. Valid values: "default" or "powercycle". | `string` | `null` | no |
 | <a name="input_talos_upgrade_stage"></a> [talos\_upgrade\_stage](#input\_talos\_upgrade\_stage) | Stage the Talos upgrade to perform it after a reboot. | `bool` | `false` | no |
-| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.13.4"` | no |
+| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.13.5"` | no |
 | <a name="input_talosctl_retries"></a> [talosctl\_retries](#input\_talosctl\_retries) | Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability. | `number` | `100` | no |
 | <a name="input_talosctl_version_check_enabled"></a> [talosctl\_version\_check\_enabled](#input\_talosctl\_version\_check\_enabled) | Controls whether a preflight check verifies the local talosctl client version before provisioning. | `bool` | `true` | no |
 | <a name="input_worker_config_patches"></a> [worker\_config\_patches](#input\_worker\_config\_patches) | List of configuration patches applied to the Worker nodes. | `any` | `[]` | no |

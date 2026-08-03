@@ -269,7 +269,7 @@ variable "worker_config_patches" {
 # Talos
 variable "talos_version" {
   type        = string
-  default     = "v1.13.4" # https://github.com/siderolabs/talos
+  default     = "v1.13.5" # https://github.com/siderolabs/talos
   description = "Specifies the version of Talos to be used in generated machine configurations."
 }
 
@@ -778,7 +778,7 @@ variable "talos_ccm_helm_chart" {
 
 variable "talos_ccm_helm_version" {
   type        = string
-  default     = "0.5.4"
+  default     = "0.5.5"
   description = "Helm chart version for the Talos CCM."
 }
 
@@ -964,7 +964,7 @@ variable "longhorn_helm_chart" {
 
 variable "longhorn_helm_version" {
   type        = string
-  default     = "1.11.2"
+  default     = "1.11.3"
   description = "Version of the Longhorn Helm chart to deploy."
 }
 
@@ -1286,7 +1286,7 @@ variable "cert_manager_helm_chart" {
 
 variable "cert_manager_helm_version" {
   type        = string
-  default     = "v1.20.2"
+  default     = "v1.20.3"
   description = "Version of the Cert Manager Helm chart to deploy."
 }
 
@@ -1337,6 +1337,6 @@ variable "prometheus_operator_crds_enabled" {
 
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.92.0" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.92.1" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }
