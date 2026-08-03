@@ -44,13 +44,13 @@ This module is a port of [terraform-hcloud-kubernetes](https://github.com/hcloud
 
 This module removes Hetzner Cloud-specific features and replaces them with Proxmox equivalents where applicable:
 
-**Removed (Hetzner-specific, no Proxmox equivalent):**
-- **Ingress NGINX** — Uses Hetzner LB annotations. Use Cilium Gateway API or deploy your own ingress controller.
-- **Cluster Autoscaler** — Proxmox does not support dynamic VM provisioning.
-- **Firewall** — Use Proxmox host firewall instead.
-- **Placement Groups** — No multi-zone spreading on single Proxmox node.
-- **Reverse DNS** — Manage externally.
-- **SSH Key Management** — Talos does not use SSH.
+**Not carried over from the upstream module:**
+- **Ingress NGINX** — the upstream integration is built around Hetzner load balancer annotations. Use Cilium Gateway API or deploy your own ingress controller.
+- **Cluster Autoscaler** — `kubernetes/autoscaler` ships no Proxmox cloud provider, so there is nothing to deploy in its place. Not a limitation of Proxmox itself, which creates VMs on demand. Node autoscaling on Proxmox is possible via Cluster API, but that is a different management model: an autoscaler creates and deletes VMs outside of Terraform state.
+- **Firewall** — the upstream module manages Hetzner's API-driven cloud firewall. Proxmox has its own firewall at datacenter, node and VM level; this module does not manage it.
+- **Placement Groups** — Hetzner placement groups spread servers across physical hosts inside a location. On Proxmox, placement is explicit: set `proxmox_node` per nodepool to distribute nodes across hosts. Proxmox HA groups and HA rules (PVE 9+) can express affinity constraints but are out of scope here.
+- **Reverse DNS** — manage externally.
+- **SSH Key Management** — Talos nodes have no SSH. Note that the bpg provider still needs SSH to the *Proxmox host* for dedicated storage disks, see [Infrastructure Prerequisites](#infrastructure-prerequisites).
 
 **Replaced (mechanism swap):**
 
