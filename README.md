@@ -111,7 +111,7 @@ Talos Linux removes SSH and shell access, managed exclusively through a secure m
 
 Every release is deployed and upgraded in place on the maintainer's reference cluster before it is tagged. That cluster is the baseline for what "tested" means here:
 
-| | |
+| Aspect | Reference cluster |
 |---|---|
 | Proxmox VE | 8.4.18, **single standalone host** (no Proxmox cluster, no shared storage) |
 | Topology | 1 control plane + 3 workers as the steady state; multi-control-plane setups exercised during testing |
