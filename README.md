@@ -68,7 +68,7 @@ This module removes Hetzner Cloud-specific features and replaces them with Proxm
 
 **Added (Proxmox-specific):**
 - **Proxmox CCM** — Auto-provisions API user/role/token. Initializes nodes and automatically cleans up Node objects on VM deletion.
-- **Piraeus/LINSTOR** — DRBD-based storage option with kernel modules and dedicated disks.
+- **Piraeus/LINSTOR node preparation** — DRBD extension, kernel modules and dedicated disks. The Piraeus Operator itself is not deployed by this module.
 - **Cilium L2 Announcements** — LoadBalancer services reachable on local network.
 - **Dedicated storage disk** — Optional second disk on workers for storage backends.
 - **VM ID calculation** — Deterministic IDs from network CIDR offset.
@@ -78,10 +78,10 @@ This module removes Hetzner Cloud-specific features and replaces them with Proxm
 * **Immutable Infrastructure:** Uses Talos Linux for a fully declarative, immutable Kubernetes cluster.
 * **High Availability:** Supports multi-node control planes with Talos Layer2 VIP for API server failover.
 * **Upgrade Orchestration:** Rolling Talos and Kubernetes upgrades with health checks between nodes.
-* **Quick Start:** Optional Cilium Gateway API, Cert Manager, Longhorn, and Piraeus/LINSTOR integrations.
+* **Quick Start:** Optional Cilium Gateway API, Cert Manager and Longhorn are deployed by the module; Piraeus/LINSTOR is prepared for, but installed separately.
 * **L2 Load Balancing:** Cilium L2 Announcements for LoadBalancer services without an external load balancer.
 * **Security:** Disk encryption (LUKS2), transparent network encryption (WireGuard/IPSec), and Talos mTLS API.
-* **Storage Options:** Longhorn or Piraeus/LINSTOR with dedicated storage disks on worker nodes.
+* **Storage Options:** Longhorn deployed by the module, or node preparation for Piraeus/LINSTOR (DRBD extension, kernel modules, dedicated storage disk) with the operator installed by you.
 * **Node Lifecycle:** Proxmox CCM initializes nodes and automatically cleans up Kubernetes Node objects when VMs are deleted.
 
 ### Components
@@ -106,6 +106,33 @@ Talos Linux removes SSH and shell access, managed exclusively through a secure m
 **Encryption in Transit:** Pod network traffic encrypted by Cilium using [WireGuard](https://docs.cilium.io/en/latest/security/network/encryption-wireguard/) by default, with optional [IPsec](https://docs.cilium.io/en/latest/security/network/encryption-ipsec/).
 
 **Encryption at Rest:** STATE and EPHEMERAL partitions encrypted by default using [Talos Disk Encryption](https://www.talos.dev/latest/talos-guides/configuration/disk-encryption/) with LUKS2.
+
+### Tested Configuration
+
+Every release is deployed and upgraded in place on the maintainer's reference cluster before it is tagged. That cluster is the baseline for what "tested" means here:
+
+| | |
+|---|---|
+| Proxmox VE | 8.4.18, **single standalone host** (no Proxmox cluster, no shared storage) |
+| Topology | 1 control plane + 3 workers, non-HA (single-CP, no etcd quorum) |
+| Storage | LVM-Thin (`local-lvm`) for VM disks, Directory (`local`) for the Talos ISO, plus one dedicated raw disk per worker |
+| Network | one Linux bridge with a VLAN tag, addresses assigned via cloud-init, Kubernetes API on the Talos Layer2 VIP |
+| Enabled options | Piraeus node preparation, Cilium L2 Announcements, extra Talos image extension, `staged_if_needing_reboot` apply mode, WireGuard encryption and LUKS2 partition encryption (defaults) |
+| Disabled options | Gateway API CRDs and Prometheus Operator CRDs (owned by other components in that cluster), Longhorn, cert-manager |
+
+Version combinations exercised so far:
+
+| Module | Talos | Kubernetes | Cilium |
+|---|---|---|---|
+| 5.3.0 | v1.13.5 | v1.34.9 | 1.19.5 |
+| 5.2.0 | v1.13.5 | v1.34.9 | 1.19.5 |
+| 5.0.0 | v1.13.4 | v1.34.9 | 1.19.5 |
+| 4.8.0 | v1.12.9 | v1.33.12 | 1.18.11 |
+| 4.5.0 | v1.12.7 | v1.33.12 | 1.18.10 |
+
+Each of these was reached as an in-place rolling upgrade from the previous row, including Talos minor and Kubernetes minor transitions — not a fresh deployment.
+
+**Not covered by these tests.** Treat the following as untested rather than unsupported: multi-host Proxmox clusters and per-nodepool host placement, multi-control-plane / HA setups, Longhorn, cert-manager, Ingress via Gateway API CRDs deployed by this module, IPsec instead of WireGuard, IPv6, OIDC, and Talos Backup to S3 (the manifest is deployed but the CronJob stays suspended while no bucket is configured). Reports and fixes for these paths are welcome.
 
 ## Getting Started
 
@@ -223,8 +250,8 @@ Create a `main.tf` file with the module configuration:
 ```hcl
 module "kubernetes" {
   # Terraform Registry (recommended)
-  source  = "haferbeck/proxmox-kubernetes/proxmox"
-  version = "~> 4.0"
+  source  = "haferbeck/kubernetes/proxmox"
+  version = "~> 5.0"
 
   # Or pull directly from GitHub:
   # source = "github.com/haferbeck/terraform-proxmox-kubernetes"
@@ -477,7 +504,7 @@ Requires `storage_disk_size > 0` on all worker nodepools. A dedicated disk (`scs
 
 #### Piraeus / LINSTOR
 
-Piraeus provides DRBD-based replicated storage via the LINSTOR operator. This module prepares the infrastructure; install the Piraeus Operator separately (e.g. via ArgoCD).
+Piraeus provides DRBD-based replicated storage via the LINSTOR operator. **This module only prepares the nodes — it does not deploy Piraeus.** Install the Piraeus Operator yourself (e.g. via ArgoCD or Helm) after the cluster is up, then create your `LinstorCluster` / storage classes.
 
 ```hcl
 piraeus_enabled = true
@@ -485,8 +512,8 @@ piraeus_enabled = true
 
 This will:
 - Add `siderolabs/drbd` and `siderolabs/util-linux-tools` extensions to the Talos image
-- Load `drbd` and `drbd_transport_tcp` kernel modules
-- Provision a dedicated raw storage disk (`scsi1`) on worker nodes
+- Load the `drbd` (with `usermode_helper=disabled`) and `dm-thin-pool` kernel modules
+- Provision a dedicated raw storage disk (`scsi1`) on worker nodes, left unformatted for LINSTOR
 
 Requires `storage_disk_size > 0` on all worker nodepools. Piraeus and Longhorn cannot both be enabled.
 
@@ -592,7 +619,9 @@ gateway_api_crds_enabled         = true
 # Additional Components (disabled by default)
 cert_manager_enabled = true
 longhorn_enabled     = true
-piraeus_enabled      = true
+
+# Node preparation only — no operator is deployed (see Piraeus / LINSTOR above)
+piraeus_enabled = true
 ```
 
 > **Note:** Disabling a component does not delete its existing resources. You must remove deployed resources manually after disabling.
@@ -938,7 +967,7 @@ No modules.
 | <a name="input_proxmox_ccm_helm_chart"></a> [proxmox\_ccm\_helm\_chart](#input\_proxmox\_ccm\_helm\_chart) | Helm chart name for the Proxmox CCM. | `string` | `"proxmox-cloud-controller-manager"` | no |
 | <a name="input_proxmox_ccm_helm_repository"></a> [proxmox\_ccm\_helm\_repository](#input\_proxmox\_ccm\_helm\_repository) | Helm repository for the Proxmox CCM chart. | `string` | `"oci://ghcr.io/sergelogvinov/charts"` | no |
 | <a name="input_proxmox_ccm_helm_values"></a> [proxmox\_ccm\_helm\_values](#input\_proxmox\_ccm\_helm\_values) | Custom Helm values for the Proxmox CCM chart. | `any` | `{}` | no |
-| <a name="input_proxmox_ccm_helm_version"></a> [proxmox\_ccm\_helm\_version](#input\_proxmox\_ccm\_helm\_version) | Helm chart version for the Proxmox CCM. | `string` | `"0.2.27"` | no |
+| <a name="input_proxmox_ccm_helm_version"></a> [proxmox\_ccm\_helm\_version](#input\_proxmox\_ccm\_helm\_version) | Helm chart version for the Proxmox CCM. | `string` | `"0.2.29"` | no |
 | <a name="input_proxmox_ccm_region"></a> [proxmox\_ccm\_region](#input\_proxmox\_ccm\_region) | Region identifier for this Proxmox cluster. Used as topology.kubernetes.io/region label. | `string` | `"default"` | no |
 | <a name="input_proxmox_keyboard_layout"></a> [proxmox\_keyboard\_layout](#input\_proxmox\_keyboard\_layout) | The keyboard layout for the VM console. | `string` | `"en-us"` | no |
 | <a name="input_proxmox_network_bridge"></a> [proxmox\_network\_bridge](#input\_proxmox\_network\_bridge) | The Proxmox network bridge to attach VM network interfaces to. | `string` | `"vmbr0"` | no |
@@ -962,7 +991,7 @@ No modules.
 | <a name="input_talos_ccm_helm_chart"></a> [talos\_ccm\_helm\_chart](#input\_talos\_ccm\_helm\_chart) | Helm chart name for the Talos CCM. | `string` | `"talos-cloud-controller-manager"` | no |
 | <a name="input_talos_ccm_helm_repository"></a> [talos\_ccm\_helm\_repository](#input\_talos\_ccm\_helm\_repository) | Helm repository for the Talos CCM chart. | `string` | `"oci://ghcr.io/siderolabs/charts"` | no |
 | <a name="input_talos_ccm_helm_values"></a> [talos\_ccm\_helm\_values](#input\_talos\_ccm\_helm\_values) | Custom Helm values for the Talos CCM chart. | `any` | `{}` | no |
-| <a name="input_talos_ccm_helm_version"></a> [talos\_ccm\_helm\_version](#input\_talos\_ccm\_helm\_version) | Helm chart version for the Talos CCM. | `string` | `"0.5.5"` | no |
+| <a name="input_talos_ccm_helm_version"></a> [talos\_ccm\_helm\_version](#input\_talos\_ccm\_helm\_version) | Helm chart version for the Talos CCM. | `string` | `"0.5.6"` | no |
 | <a name="input_talos_certificates"></a> [talos\_certificates](#input\_talos\_certificates) | Additional trusted CA certificates to be added to the Talos configuration.<br/>Map keys are used as names for the TrustedRootsConfig documents.<br/>Values can be either a single PEM-encoded string containing one or more certificates (inline or from file), or a list of PEM-encoded strings.<br/><br/>Example:<pre>hcl<br/>talos_certificates = {<br/>  # Inline string (single certificate)<br/>  "inline-ca" = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"<br/><br/>  # Single certificate from file<br/>  "file-ca" = [file("ca.crt")]<br/><br/>  # Multiple certificates from files (chain)<br/>  "corporate-chain" = [file("root.crt"), file("intermediate.crt")]<br/><br/>  # Multiple inline certificates in a single string (backward compatible)<br/>  "legacy-ca" = <<-EOT<br/>    -----BEGIN CERTIFICATE-----<br/>    ...<br/>    -----END CERTIFICATE-----<br/>    -----BEGIN CERTIFICATE-----<br/>    ...<br/>    -----END CERTIFICATE-----<br/>  EOT<br/>}</pre> | `any` | `{}` | no |
 | <a name="input_talos_coredns_enabled"></a> [talos\_coredns\_enabled](#input\_talos\_coredns\_enabled) | Determines whether CoreDNS is enabled in the Talos cluster. When enabled, CoreDNS serves as the primary DNS service provider in Kubernetes. | `bool` | `true` | no |
 | <a name="input_talos_discovery_kubernetes_enabled"></a> [talos\_discovery\_kubernetes\_enabled](#input\_talos\_discovery\_kubernetes\_enabled) | Enable or disable Kubernetes-based Talos discovery service. Deprecated as of Kubernetes v1.32, where the AuthorizeNodeWithSelectors feature gate is enabled by default. | `bool` | `false` | no |
