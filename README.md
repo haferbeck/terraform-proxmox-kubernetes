@@ -806,7 +806,7 @@ Full input/output reference is auto-generated from the module sources via [terra
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.9.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 3.2.0 |
-| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.89.0 |
+| <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.100.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.9.0 |
 | <a name="requirement_talos"></a> [talos](#requirement\_talos) | 0.11.0 |
 
@@ -816,7 +816,7 @@ Full input/output reference is auto-generated from the module sources via [terra
 |------|---------|
 | <a name="provider_external"></a> [external](#provider\_external) | ~> 2.3.0 |
 | <a name="provider_helm"></a> [helm](#provider\_helm) | ~> 3.2.0 |
-| <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.89.0 |
+| <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.100.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.9.0 |
 | <a name="provider_talos"></a> [talos](#provider\_talos) | 0.11.0 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
@@ -861,7 +861,7 @@ No modules.
 | [helm_template.metrics_server](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/data-sources/template) | data source |
 | [helm_template.proxmox_ccm](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/data-sources/template) | data source |
 | [helm_template.talos_ccm](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/data-sources/template) | data source |
-| [proxmox_virtual_environment_datastores.preflight](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/data-sources/virtual_environment_datastores) | data source |
+| [proxmox_datastores.preflight](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/data-sources/datastores) | data source |
 | [talos_client_configuration.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/client_configuration) | data source |
 | [talos_cluster_health.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/cluster_health) | data source |
 | [talos_image_factory_extensions_versions.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/image_factory_extensions_versions) | data source |
