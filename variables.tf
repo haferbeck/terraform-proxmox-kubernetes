@@ -269,7 +269,7 @@ variable "worker_config_patches" {
 # Talos
 variable "talos_version" {
   type        = string
-  default     = "v1.13.5" # https://github.com/siderolabs/talos
+  default     = "v1.13.7" # https://github.com/siderolabs/talos
   description = "Specifies the version of Talos to be used in generated machine configurations."
 }
 
@@ -358,6 +358,12 @@ variable "talos_discovery_service_enabled" {
   type        = bool
   default     = true
   description = "Enable or disable Sidero Labs public Talos discovery service."
+}
+
+variable "talos_cri_discard_unpacked_layers" {
+  type        = bool
+  default     = true
+  description = "Determines whether containerd discards unpacked image layers on all Talos nodes. Set to false to retain unpacked image layers. Attention: Changing this value forces all Talos nodes to reboot and should be performed with `talos_machine_configuration_apply_mode = \"staged\"`."
 }
 
 variable "talos_kubelet_extra_mounts" {
@@ -659,7 +665,7 @@ variable "talos_backup_schedule" {
 # Kubernetes
 variable "kubernetes_version" {
   type        = string
-  default     = "v1.34.9" # https://github.com/kubernetes/kubernetes
+  default     = "v1.34.10" # https://github.com/kubernetes/kubernetes
   description = "Specifies the Kubernetes version to deploy."
 }
 
@@ -1035,7 +1041,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.19.5"
+  default     = "1.19.6"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
@@ -1337,6 +1343,6 @@ variable "prometheus_operator_crds_enabled" {
 
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.92.1" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.93.0" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }

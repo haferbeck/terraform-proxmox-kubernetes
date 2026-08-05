@@ -141,6 +141,24 @@ locals {
     }
   ] : []
 
+  # CRI Configuration
+  talos_cri_config_patches = !var.talos_cri_discard_unpacked_layers ? [
+    {
+      machine = {
+        files = [
+          {
+            path    = "/etc/cri/conf.d/20-customization.part"
+            op      = "create"
+            content = <<-EOT
+              [plugins."io.containerd.cri.v1.images"]
+                discard_unpacked_layers = false
+            EOT
+          }
+        ]
+      }
+    }
+  ] : []
+
   # DRBD kernel modules for Piraeus/LINSTOR (proxmox-port-only)
   talos_piraeus_kernel_modules = var.piraeus_enabled ? tolist([
     {
@@ -225,7 +243,8 @@ locals {
     [local.talos_resolver_config_patch],
     [local.talos_time_sync_config_patch],
     local.talos_static_host_config_patches,
-    local.talos_trusted_certs_config_patches
+    local.talos_trusted_certs_config_patches,
+    local.talos_cri_config_patches
   )
 
   # Talos Cloud Config — patches specific to VM nodes. Upstream splits cloud
