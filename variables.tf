@@ -834,7 +834,7 @@ variable "proxmox_ccm_helm_chart" {
 
 variable "proxmox_ccm_helm_version" {
   type        = string
-  default     = "0.2.29"
+  default     = "0.2.30"
   description = "Helm chart version for the Proxmox CCM."
 }
 

@@ -124,6 +124,7 @@ Version combinations exercised so far:
 
 | Module | Talos | Kubernetes | Cilium |
 |---|---|---|---|
+| 5.5.0 | v1.13.8 | v1.34.10 | 1.19.6 |
 | 5.4.0 | v1.13.7 | v1.34.10 | 1.19.6 |
 | 5.3.0 | v1.13.5 | v1.34.9 | 1.19.5 |
 | 5.2.0 | v1.13.5 | v1.34.9 | 1.19.5 |
@@ -989,7 +990,7 @@ No modules.
 | <a name="input_proxmox_ccm_helm_chart"></a> [proxmox\_ccm\_helm\_chart](#input\_proxmox\_ccm\_helm\_chart) | Helm chart name for the Proxmox CCM. | `string` | `"proxmox-cloud-controller-manager"` | no |
 | <a name="input_proxmox_ccm_helm_repository"></a> [proxmox\_ccm\_helm\_repository](#input\_proxmox\_ccm\_helm\_repository) | Helm repository for the Proxmox CCM chart. | `string` | `"oci://ghcr.io/sergelogvinov/charts"` | no |
 | <a name="input_proxmox_ccm_helm_values"></a> [proxmox\_ccm\_helm\_values](#input\_proxmox\_ccm\_helm\_values) | Custom Helm values for the Proxmox CCM chart. | `any` | `{}` | no |
-| <a name="input_proxmox_ccm_helm_version"></a> [proxmox\_ccm\_helm\_version](#input\_proxmox\_ccm\_helm\_version) | Helm chart version for the Proxmox CCM. | `string` | `"0.2.29"` | no |
+| <a name="input_proxmox_ccm_helm_version"></a> [proxmox\_ccm\_helm\_version](#input\_proxmox\_ccm\_helm\_version) | Helm chart version for the Proxmox CCM. | `string` | `"0.2.30"` | no |
 | <a name="input_proxmox_ccm_region"></a> [proxmox\_ccm\_region](#input\_proxmox\_ccm\_region) | Region identifier for this Proxmox cluster. Used as topology.kubernetes.io/region label. | `string` | `"default"` | no |
 | <a name="input_proxmox_keyboard_layout"></a> [proxmox\_keyboard\_layout](#input\_proxmox\_keyboard\_layout) | The keyboard layout for the VM console. | `string` | `"en-us"` | no |
 | <a name="input_proxmox_network_bridge"></a> [proxmox\_network\_bridge](#input\_proxmox\_network\_bridge) | The Proxmox network bridge to attach VM network interfaces to. | `string` | `"vmbr0"` | no |
@@ -1045,7 +1046,7 @@ No modules.
 | <a name="input_talos_upgrade_insecure"></a> [talos\_upgrade\_insecure](#input\_talos\_upgrade\_insecure) | Upgrade using the insecure (no auth) maintenance service. | `bool` | `false` | no |
 | <a name="input_talos_upgrade_reboot_mode"></a> [talos\_upgrade\_reboot\_mode](#input\_talos\_upgrade\_reboot\_mode) | Select the reboot mode during upgrade. Mode "powercycle" bypasses kexec. Valid values: "default" or "powercycle". | `string` | `null` | no |
 | <a name="input_talos_upgrade_stage"></a> [talos\_upgrade\_stage](#input\_talos\_upgrade\_stage) | Stage the Talos upgrade to perform it after a reboot. | `bool` | `false` | no |
-| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.13.7"` | no |
+| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.13.8"` | no |
 | <a name="input_talosctl_retries"></a> [talosctl\_retries](#input\_talosctl\_retries) | Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability. | `number` | `100` | no |
 | <a name="input_talosctl_version_check_enabled"></a> [talosctl\_version\_check\_enabled](#input\_talosctl\_version\_check\_enabled) | Controls whether a preflight check verifies the local talosctl client version before provisioning. | `bool` | `true` | no |
 | <a name="input_worker_config_patches"></a> [worker\_config\_patches](#input\_worker\_config\_patches) | List of configuration patches applied to the Worker nodes. | `any` | `[]` | no |
