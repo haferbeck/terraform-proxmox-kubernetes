@@ -1,12 +1,12 @@
 include:
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/init@5.9.0
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/tofu-test@5.9.0
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/init@5.10.0
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/tofu-test@5.10.0
     inputs:
       module_name: kubernetes
       module_root: .
       enable_github_code_scanning: true
       github_repo: haferbeck/terraform-proxmox-kubernetes
-  - component: $CI_SERVER_FQDN/devops/pipeline-components/tofu-release@5.9.0
+  - component: $CI_SERVER_FQDN/devops/pipeline-components/tofu-release@5.10.0
     inputs:
       module_name: kubernetes
       module_system: proxmox
