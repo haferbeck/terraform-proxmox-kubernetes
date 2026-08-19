@@ -269,7 +269,7 @@ variable "worker_config_patches" {
 # Talos
 variable "talos_version" {
   type        = string
-  default     = "v1.13.8" # https://github.com/siderolabs/talos
+  default     = "v1.13.9" # https://github.com/siderolabs/talos
   description = "Specifies the version of Talos to be used in generated machine configurations."
 }
 
@@ -1343,6 +1343,6 @@ variable "prometheus_operator_crds_enabled" {
 
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.93.0" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.93.1" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }

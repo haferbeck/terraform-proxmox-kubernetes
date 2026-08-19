@@ -124,6 +124,7 @@ Version combinations exercised so far:
 
 | Module | Talos | Kubernetes | Cilium |
 |---|---|---|---|
+| 5.6.0 | v1.13.9 | v1.34.10 | 1.19.6 |
 | 5.5.0 | v1.13.8 | v1.34.10 | 1.19.6 |
 | 5.4.0 | v1.13.7 | v1.34.10 | 1.19.6 |
 | 5.3.0 | v1.13.5 | v1.34.9 | 1.19.5 |
@@ -983,7 +984,7 @@ No modules.
 | <a name="input_oidc_username_claim"></a> [oidc\_username\_claim](#input\_oidc\_username\_claim) | JWT claim to use as the username | `string` | `"sub"` | no |
 | <a name="input_piraeus_enabled"></a> [piraeus\_enabled](#input\_piraeus\_enabled) | Prepares the cluster for Piraeus/LINSTOR storage: adds DRBD extension to the Talos image, loads DRBD kernel modules, and provisions a dedicated storage disk on worker nodes. The actual Piraeus Operator must be installed separately (e.g. via ArgoCD). | `bool` | `false` | no |
 | <a name="input_prometheus_operator_crds_enabled"></a> [prometheus\_operator\_crds\_enabled](#input\_prometheus\_operator\_crds\_enabled) | Enables the Prometheus Operator Custom Resource Definitions (CRDs) deployment. | `bool` | `true` | no |
-| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.93.0"` | no |
+| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.93.1"` | no |
 | <a name="input_proxmox_ccm_api_insecure"></a> [proxmox\_ccm\_api\_insecure](#input\_proxmox\_ccm\_api\_insecure) | Allow insecure TLS connections to the Proxmox API. | `bool` | `true` | no |
 | <a name="input_proxmox_ccm_api_url"></a> [proxmox\_ccm\_api\_url](#input\_proxmox\_ccm\_api\_url) | Proxmox API URL for the CCM. If not set, derived from proxmox\_node (https://<proxmox\_node>:8006/api2/json). | `string` | `null` | no |
 | <a name="input_proxmox_ccm_enabled"></a> [proxmox\_ccm\_enabled](#input\_proxmox\_ccm\_enabled) | Enables the Proxmox Cloud Controller Manager. Manages node lifecycle (automatic cleanup of deleted nodes) and sets provider-specific labels. A dedicated Proxmox API user and token are automatically provisioned. | `bool` | `true` | no |
@@ -1046,7 +1047,7 @@ No modules.
 | <a name="input_talos_upgrade_insecure"></a> [talos\_upgrade\_insecure](#input\_talos\_upgrade\_insecure) | Upgrade using the insecure (no auth) maintenance service. | `bool` | `false` | no |
 | <a name="input_talos_upgrade_reboot_mode"></a> [talos\_upgrade\_reboot\_mode](#input\_talos\_upgrade\_reboot\_mode) | Select the reboot mode during upgrade. Mode "powercycle" bypasses kexec. Valid values: "default" or "powercycle". | `string` | `null` | no |
 | <a name="input_talos_upgrade_stage"></a> [talos\_upgrade\_stage](#input\_talos\_upgrade\_stage) | Stage the Talos upgrade to perform it after a reboot. | `bool` | `false` | no |
-| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.13.8"` | no |
+| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.13.9"` | no |
 | <a name="input_talosctl_retries"></a> [talosctl\_retries](#input\_talosctl\_retries) | Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability. | `number` | `100` | no |
 | <a name="input_talosctl_version_check_enabled"></a> [talosctl\_version\_check\_enabled](#input\_talosctl\_version\_check\_enabled) | Controls whether a preflight check verifies the local talosctl client version before provisioning. | `bool` | `true` | no |
 | <a name="input_worker_config_patches"></a> [worker\_config\_patches](#input\_worker\_config\_patches) | List of configuration patches applied to the Worker nodes. | `any` | `[]` | no |
