@@ -269,7 +269,7 @@ variable "worker_config_patches" {
 # Talos
 variable "talos_version" {
   type        = string
-  default     = "v1.13.9" # https://github.com/siderolabs/talos
+  default     = "v1.13.10" # https://github.com/siderolabs/talos
   description = "Specifies the version of Talos to be used in generated machine configurations."
 }
 
@@ -665,7 +665,7 @@ variable "talos_backup_schedule" {
 # Kubernetes
 variable "kubernetes_version" {
   type        = string
-  default     = "v1.34.10" # https://github.com/kubernetes/kubernetes
+  default     = "v1.34.11" # https://github.com/kubernetes/kubernetes
   description = "Specifies the Kubernetes version to deploy."
 }
 
@@ -1041,7 +1041,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.19.6"
+  default     = "1.19.7"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
@@ -1248,7 +1248,7 @@ variable "metrics_server_helm_chart" {
 
 variable "metrics_server_helm_version" {
   type        = string
-  default     = "3.13.1"
+  default     = "3.14.0"
   description = "Version of the Metrics Server Helm chart to deploy."
 }
 
@@ -1292,7 +1292,7 @@ variable "cert_manager_helm_chart" {
 
 variable "cert_manager_helm_version" {
   type        = string
-  default     = "v1.20.3"
+  default     = "v1.21.1"
   description = "Version of the Cert Manager Helm chart to deploy."
 }
 
