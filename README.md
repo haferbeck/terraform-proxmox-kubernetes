@@ -124,6 +124,7 @@ Version combinations exercised so far:
 
 | Module | Talos | Kubernetes | Cilium |
 |---|---|---|---|
+| 5.8.0 | v1.13.10 | v1.34.11 | 1.19.7 |
 | 5.6.0 | v1.13.9 | v1.34.10 | 1.19.6 |
 | 5.5.0 | v1.13.8 | v1.34.10 | 1.19.6 |
 | 5.4.0 | v1.13.7 | v1.34.10 | 1.19.6 |
