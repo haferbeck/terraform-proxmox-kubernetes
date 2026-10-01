@@ -19,6 +19,12 @@
       "minimumReleaseAge": "14 days"
     },
     {
+      "description": "Stability: Keep Gateway API on the version supported by Cilium",
+      "matchDatasources": ["github-tags"],
+      "matchDepNames": ["kubernetes-sigs/gateway-api"],
+      "allowedVersions": "<=1.6.1"
+    },
+    {
       "description": "Stability: Kubernetes — only allow current and next minor stream",
       "matchDatasources": ["github-tags", "github-releases"],
       "matchDepNames": ["kubernetes/kubernetes"],

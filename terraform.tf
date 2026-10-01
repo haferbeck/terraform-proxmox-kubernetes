@@ -4,7 +4,7 @@ terraform {
   required_providers {
     talos = {
       source  = "siderolabs/talos"
-      version = "0.11.0"
+      version = "0.12.0"
     }
 
     proxmox = {
@@ -16,7 +16,7 @@ terraform {
 
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 3.2.0"
+      version = "~> 3.3.0"
     }
 
     random = {
@@ -26,7 +26,7 @@ terraform {
 
     external = {
       source  = "hashicorp/external"
-      version = "~> 2.3.0"
+      version = "~> 2.4.0"
     }
 
   }

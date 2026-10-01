@@ -829,21 +829,21 @@ Full input/output reference is auto-generated from the module sources via [terra
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.9.0 |
-| <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
-| <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 3.2.0 |
+| <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.4.0 |
+| <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 3.3.0 |
 | <a name="requirement_proxmox"></a> [proxmox](#requirement\_proxmox) | >= 0.100.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.9.0 |
-| <a name="requirement_talos"></a> [talos](#requirement\_talos) | 0.11.0 |
+| <a name="requirement_talos"></a> [talos](#requirement\_talos) | 0.12.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_external"></a> [external](#provider\_external) | ~> 2.3.0 |
-| <a name="provider_helm"></a> [helm](#provider\_helm) | ~> 3.2.0 |
+| <a name="provider_external"></a> [external](#provider\_external) | ~> 2.4.0 |
+| <a name="provider_helm"></a> [helm](#provider\_helm) | ~> 3.3.0 |
 | <a name="provider_proxmox"></a> [proxmox](#provider\_proxmox) | >= 0.100.0 |
 | <a name="provider_random"></a> [random](#provider\_random) | ~> 3.9.0 |
-| <a name="provider_talos"></a> [talos](#provider\_talos) | 0.11.0 |
+| <a name="provider_talos"></a> [talos](#provider\_talos) | 0.12.0 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Modules
@@ -861,12 +861,12 @@ No modules.
 | [proxmox_virtual_environment_vm.control_plane](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_vm) | resource |
 | [proxmox_virtual_environment_vm.worker](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_vm) | resource |
 | [random_bytes.cilium_ipsec_key](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/bytes) | resource |
-| [talos_cluster_kubeconfig.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/resources/cluster_kubeconfig) | resource |
-| [talos_image_factory_schematic.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/resources/image_factory_schematic) | resource |
-| [talos_machine_bootstrap.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/resources/machine_bootstrap) | resource |
-| [talos_machine_configuration_apply.control_plane](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/resources/machine_configuration_apply) | resource |
-| [talos_machine_configuration_apply.worker](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/resources/machine_configuration_apply) | resource |
-| [talos_machine_secrets.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/resources/machine_secrets) | resource |
+| [talos_cluster_kubeconfig.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/cluster_kubeconfig) | resource |
+| [talos_image_factory_schematic.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/image_factory_schematic) | resource |
+| [talos_machine_bootstrap.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/machine_bootstrap) | resource |
+| [talos_machine_configuration_apply.control_plane](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/machine_configuration_apply) | resource |
+| [talos_machine_configuration_apply.worker](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/machine_configuration_apply) | resource |
+| [talos_machine_secrets.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/machine_secrets) | resource |
 | [terraform_data.create_kubeconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.create_talosconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.preflight](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
@@ -887,12 +887,12 @@ No modules.
 | [helm_template.proxmox_ccm](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/data-sources/template) | data source |
 | [helm_template.talos_ccm](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/data-sources/template) | data source |
 | [proxmox_datastores.preflight](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/data-sources/datastores) | data source |
-| [talos_client_configuration.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/client_configuration) | data source |
-| [talos_cluster_health.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/cluster_health) | data source |
-| [talos_image_factory_extensions_versions.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/image_factory_extensions_versions) | data source |
-| [talos_image_factory_urls.this](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/image_factory_urls) | data source |
-| [talos_machine_configuration.control_plane](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/machine_configuration) | data source |
-| [talos_machine_configuration.worker](https://registry.terraform.io/providers/siderolabs/talos/0.11.0/docs/data-sources/machine_configuration) | data source |
+| [talos_client_configuration.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/client_configuration) | data source |
+| [talos_cluster_health.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/cluster_health) | data source |
+| [talos_image_factory_extensions_versions.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/image_factory_extensions_versions) | data source |
+| [talos_image_factory_urls.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/image_factory_urls) | data source |
+| [talos_machine_configuration.control_plane](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/machine_configuration) | data source |
+| [talos_machine_configuration.worker](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/machine_configuration) | data source |
 
 ## Inputs
 
@@ -909,7 +909,7 @@ No modules.
 | <a name="input_cert_manager_helm_chart"></a> [cert\_manager\_helm\_chart](#input\_cert\_manager\_helm\_chart) | Name of the Helm chart used for deploying Cert Manager. | `string` | `"cert-manager"` | no |
 | <a name="input_cert_manager_helm_repository"></a> [cert\_manager\_helm\_repository](#input\_cert\_manager\_helm\_repository) | URL of the Helm repository where the Cert Manager chart is located. | `string` | `"https://charts.jetstack.io"` | no |
 | <a name="input_cert_manager_helm_values"></a> [cert\_manager\_helm\_values](#input\_cert\_manager\_helm\_values) | Custom Helm values for the Cert Manager chart deployment. These values will merge with and will override the default values provided by the Cert Manager Helm chart. | `any` | `{}` | no |
-| <a name="input_cert_manager_helm_version"></a> [cert\_manager\_helm\_version](#input\_cert\_manager\_helm\_version) | Version of the Cert Manager Helm chart to deploy. | `string` | `"v1.21.1"` | no |
+| <a name="input_cert_manager_helm_version"></a> [cert\_manager\_helm\_version](#input\_cert\_manager\_helm\_version) | Version of the Cert Manager Helm chart to deploy. | `string` | `"v1.21.2"` | no |
 | <a name="input_cilium_bpf_datapath_mode"></a> [cilium\_bpf\_datapath\_mode](#input\_cilium\_bpf\_datapath\_mode) | Mode for Pod devices for the core datapath. Allowed values: veth, netkit, netkit-l2. Warning: Netkit is still in beta and should not be used together with IPsec encryption! | `string` | `"veth"` | no |
 | <a name="input_cilium_bpf_host_legacy_routing"></a> [cilium\_bpf\_host\_legacy\_routing](#input\_cilium\_bpf\_host\_legacy\_routing) | Explicitly enable or disable Cilium's legacy host routing. When omitted, the value is automatically determined and only set to `true` if necessary, for example when IPSec is enabled. | `bool` | `null` | no |
 | <a name="input_cilium_egress_gateway_enabled"></a> [cilium\_egress\_gateway\_enabled](#input\_cilium\_egress\_gateway\_enabled) | Enables egress gateway to redirect and SNAT the traffic that leaves the cluster. | `bool` | `false` | no |
@@ -922,7 +922,7 @@ No modules.
 | <a name="input_cilium_helm_chart"></a> [cilium\_helm\_chart](#input\_cilium\_helm\_chart) | Name of the Helm chart used for deploying Cilium. | `string` | `"cilium"` | no |
 | <a name="input_cilium_helm_repository"></a> [cilium\_helm\_repository](#input\_cilium\_helm\_repository) | URL of the Helm repository where the Cilium chart is located. | `string` | `"https://helm.cilium.io"` | no |
 | <a name="input_cilium_helm_values"></a> [cilium\_helm\_values](#input\_cilium\_helm\_values) | Custom Helm values for the Cilium chart deployment. These values will merge with and will override the default values provided by the Cilium Helm chart. | `any` | `{}` | no |
-| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.19.7"` | no |
+| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.20.2"` | no |
 | <a name="input_cilium_hubble_enabled"></a> [cilium\_hubble\_enabled](#input\_cilium\_hubble\_enabled) | Enables Hubble observability within Cilium, which may impact performance with an overhead of 1-15% depending on network traffic patterns and settings. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_relay_enabled"></a> [cilium\_hubble\_relay\_enabled](#input\_cilium\_hubble\_relay\_enabled) | Enables Hubble Relay, which requires Hubble to be enabled. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_ui_enabled"></a> [cilium\_hubble\_ui\_enabled](#input\_cilium\_hubble\_ui\_enabled) | Enables the Hubble UI, which requires Hubble Relay to be enabled. | `bool` | `false` | no |
@@ -945,7 +945,7 @@ No modules.
 | <a name="input_control_plane_config_patches"></a> [control\_plane\_config\_patches](#input\_control\_plane\_config\_patches) | List of configuration patches applied to the Control Plane nodes. | `any` | `[]` | no |
 | <a name="input_gateway_api_crds_enabled"></a> [gateway\_api\_crds\_enabled](#input\_gateway\_api\_crds\_enabled) | Enables the Gateway API Custom Resource Definitions (CRDs) deployment. | `bool` | `true` | no |
 | <a name="input_gateway_api_crds_release_channel"></a> [gateway\_api\_crds\_release\_channel](#input\_gateway\_api\_crds\_release\_channel) | Specifies the release channel for the Gateway API CRDs. Valid options are 'standard' or 'experimental'. | `string` | `"standard"` | no |
-| <a name="input_gateway_api_crds_version"></a> [gateway\_api\_crds\_version](#input\_gateway\_api\_crds\_version) | Specifies the version of the Gateway API Custom Resource Definitions (CRDs) to deploy. | `string` | `"v1.4.1"` | no |
+| <a name="input_gateway_api_crds_version"></a> [gateway\_api\_crds\_version](#input\_gateway\_api\_crds\_version) | Specifies the version of the Gateway API Custom Resource Definitions (CRDs) to deploy. | `string` | `"v1.6.1"` | no |
 | <a name="input_kube_api_admission_control"></a> [kube\_api\_admission\_control](#input\_kube\_api\_admission\_control) | List of admission control settings for the Kube API. If set, this overrides the default admission control. | `list(any)` | `[]` | no |
 | <a name="input_kube_api_extra_args"></a> [kube\_api\_extra\_args](#input\_kube\_api\_extra\_args) | Specifies additional command-line arguments to be passed to the kube-apiserver. This allows for customization of the API server's behavior according to specific cluster requirements. | `map(string)` | `{}` | no |
 | <a name="input_kube_api_hostname"></a> [kube\_api\_hostname](#input\_kube\_api\_hostname) | Specifies the hostname for external access to the Kubernetes API server. This must be a valid domain name, set to the API's public IP address. | `string` | `null` | no |
@@ -957,13 +957,13 @@ No modules.
 | <a name="input_kubernetes_kubelet_image"></a> [kubernetes\_kubelet\_image](#input\_kubernetes\_kubelet\_image) | Specifies a custom image repository for the kubelet (e.g., 'my-registry.io/kubelet'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_proxy_image"></a> [kubernetes\_proxy\_image](#input\_kubernetes\_proxy\_image) | Specifies a custom image repository for kube-proxy (e.g., 'my-registry.io/kube-proxy'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_scheduler_image"></a> [kubernetes\_scheduler\_image](#input\_kubernetes\_scheduler\_image) | Specifies a custom image repository for kube-scheduler (e.g., 'my-registry.io/kube-scheduler'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
-| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Specifies the Kubernetes version to deploy. | `string` | `"v1.34.11"` | no |
+| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Specifies the Kubernetes version to deploy. | `string` | `"v1.34.12"` | no |
 | <a name="input_longhorn_default_storage_class"></a> [longhorn\_default\_storage\_class](#input\_longhorn\_default\_storage\_class) | Set Longhorn as the default storage class. | `bool` | `false` | no |
 | <a name="input_longhorn_enabled"></a> [longhorn\_enabled](#input\_longhorn\_enabled) | Enable or disable Longhorn integration | `bool` | `false` | no |
 | <a name="input_longhorn_helm_chart"></a> [longhorn\_helm\_chart](#input\_longhorn\_helm\_chart) | Name of the Helm chart used for deploying Longhorn. | `string` | `"longhorn"` | no |
 | <a name="input_longhorn_helm_repository"></a> [longhorn\_helm\_repository](#input\_longhorn\_helm\_repository) | URL of the Helm repository where the Longhorn chart is located. | `string` | `"https://charts.longhorn.io"` | no |
 | <a name="input_longhorn_helm_values"></a> [longhorn\_helm\_values](#input\_longhorn\_helm\_values) | Custom Helm values for the Longhorn chart deployment. These values will merge with and will override the default values provided by the Longhorn Helm chart. | `any` | `{}` | no |
-| <a name="input_longhorn_helm_version"></a> [longhorn\_helm\_version](#input\_longhorn\_helm\_version) | Version of the Longhorn Helm chart to deploy. | `string` | `"1.11.3"` | no |
+| <a name="input_longhorn_helm_version"></a> [longhorn\_helm\_version](#input\_longhorn\_helm\_version) | Version of the Longhorn Helm chart to deploy. | `string` | `"1.12.1"` | no |
 | <a name="input_metrics_server_enabled"></a> [metrics\_server\_enabled](#input\_metrics\_server\_enabled) | Enables the the Kubernetes Metrics Server. | `bool` | `true` | no |
 | <a name="input_metrics_server_helm_chart"></a> [metrics\_server\_helm\_chart](#input\_metrics\_server\_helm\_chart) | Name of the Helm chart used for deploying Metrics Server. | `string` | `"metrics-server"` | no |
 | <a name="input_metrics_server_helm_repository"></a> [metrics\_server\_helm\_repository](#input\_metrics\_server\_helm\_repository) | URL of the Helm repository where the Metrics Server chart is located. | `string` | `"https://kubernetes-sigs.github.io/metrics-server"` | no |
@@ -985,14 +985,14 @@ No modules.
 | <a name="input_oidc_username_claim"></a> [oidc\_username\_claim](#input\_oidc\_username\_claim) | JWT claim to use as the username | `string` | `"sub"` | no |
 | <a name="input_piraeus_enabled"></a> [piraeus\_enabled](#input\_piraeus\_enabled) | Prepares the cluster for Piraeus/LINSTOR storage: adds DRBD extension to the Talos image, loads DRBD kernel modules, and provisions a dedicated storage disk on worker nodes. The actual Piraeus Operator must be installed separately (e.g. via ArgoCD). | `bool` | `false` | no |
 | <a name="input_prometheus_operator_crds_enabled"></a> [prometheus\_operator\_crds\_enabled](#input\_prometheus\_operator\_crds\_enabled) | Enables the Prometheus Operator Custom Resource Definitions (CRDs) deployment. | `bool` | `true` | no |
-| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.93.1"` | no |
+| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.94.1"` | no |
 | <a name="input_proxmox_ccm_api_insecure"></a> [proxmox\_ccm\_api\_insecure](#input\_proxmox\_ccm\_api\_insecure) | Allow insecure TLS connections to the Proxmox API. | `bool` | `true` | no |
 | <a name="input_proxmox_ccm_api_url"></a> [proxmox\_ccm\_api\_url](#input\_proxmox\_ccm\_api\_url) | Proxmox API URL for the CCM. If not set, derived from proxmox\_node (https://<proxmox\_node>:8006/api2/json). | `string` | `null` | no |
 | <a name="input_proxmox_ccm_enabled"></a> [proxmox\_ccm\_enabled](#input\_proxmox\_ccm\_enabled) | Enables the Proxmox Cloud Controller Manager. Manages node lifecycle (automatic cleanup of deleted nodes) and sets provider-specific labels. A dedicated Proxmox API user and token are automatically provisioned. | `bool` | `true` | no |
 | <a name="input_proxmox_ccm_helm_chart"></a> [proxmox\_ccm\_helm\_chart](#input\_proxmox\_ccm\_helm\_chart) | Helm chart name for the Proxmox CCM. | `string` | `"proxmox-cloud-controller-manager"` | no |
 | <a name="input_proxmox_ccm_helm_repository"></a> [proxmox\_ccm\_helm\_repository](#input\_proxmox\_ccm\_helm\_repository) | Helm repository for the Proxmox CCM chart. | `string` | `"oci://ghcr.io/sergelogvinov/charts"` | no |
 | <a name="input_proxmox_ccm_helm_values"></a> [proxmox\_ccm\_helm\_values](#input\_proxmox\_ccm\_helm\_values) | Custom Helm values for the Proxmox CCM chart. | `any` | `{}` | no |
-| <a name="input_proxmox_ccm_helm_version"></a> [proxmox\_ccm\_helm\_version](#input\_proxmox\_ccm\_helm\_version) | Helm chart version for the Proxmox CCM. | `string` | `"0.2.30"` | no |
+| <a name="input_proxmox_ccm_helm_version"></a> [proxmox\_ccm\_helm\_version](#input\_proxmox\_ccm\_helm\_version) | Helm chart version for the Proxmox CCM. | `string` | `"0.2.32"` | no |
 | <a name="input_proxmox_ccm_region"></a> [proxmox\_ccm\_region](#input\_proxmox\_ccm\_region) | Region identifier for this Proxmox cluster. Used as topology.kubernetes.io/region label. | `string` | `"default"` | no |
 | <a name="input_proxmox_keyboard_layout"></a> [proxmox\_keyboard\_layout](#input\_proxmox\_keyboard\_layout) | The keyboard layout for the VM console. | `string` | `"en-us"` | no |
 | <a name="input_proxmox_network_bridge"></a> [proxmox\_network\_bridge](#input\_proxmox\_network\_bridge) | The Proxmox network bridge to attach VM network interfaces to. | `string` | `"vmbr0"` | no |

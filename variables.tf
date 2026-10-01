@@ -665,7 +665,7 @@ variable "talos_backup_schedule" {
 # Kubernetes
 variable "kubernetes_version" {
   type        = string
-  default     = "v1.34.11" # https://github.com/kubernetes/kubernetes
+  default     = "v1.34.12" # https://github.com/kubernetes/kubernetes
   description = "Specifies the Kubernetes version to deploy."
 }
 
@@ -834,7 +834,7 @@ variable "proxmox_ccm_helm_chart" {
 
 variable "proxmox_ccm_helm_version" {
   type        = string
-  default     = "0.2.30"
+  default     = "0.2.32"
   description = "Helm chart version for the Proxmox CCM."
 }
 
@@ -970,7 +970,7 @@ variable "longhorn_helm_chart" {
 
 variable "longhorn_helm_version" {
   type        = string
-  default     = "1.11.3"
+  default     = "1.12.1"
   description = "Version of the Longhorn Helm chart to deploy."
 }
 
@@ -1041,7 +1041,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.19.7"
+  default     = "1.20.2"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
@@ -1292,7 +1292,7 @@ variable "cert_manager_helm_chart" {
 
 variable "cert_manager_helm_version" {
   type        = string
-  default     = "v1.21.1"
+  default     = "v1.21.2"
   description = "Version of the Cert Manager Helm chart to deploy."
 }
 
@@ -1318,7 +1318,7 @@ variable "gateway_api_crds_enabled" {
 
 variable "gateway_api_crds_version" {
   type        = string
-  default     = "v1.4.1" # https://github.com/kubernetes-sigs/gateway-api
+  default     = "v1.6.1" # https://github.com/kubernetes-sigs/gateway-api
   description = "Specifies the version of the Gateway API Custom Resource Definitions (CRDs) to deploy."
 }
 
@@ -1343,6 +1343,6 @@ variable "prometheus_operator_crds_enabled" {
 
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.93.1" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.94.1" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }
