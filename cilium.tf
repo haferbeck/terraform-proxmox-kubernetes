@@ -56,7 +56,11 @@ data "helm_template" "cilium" {
       ipam = {
         mode = "kubernetes"
       }
-      routingMode           = var.cilium_routing_mode
+      routingMode       = var.cilium_routing_mode
+      rollOutCiliumPods = true
+      ipv6 = {
+        enabled = var.network_pod_ipv6_cidr != null
+      }
       ipv4NativeRoutingCIDR = local.network_native_routing_ipv4_cidr
       policyCIDRMatchMode   = var.cilium_policy_cidr_match_mode
       bpf = {

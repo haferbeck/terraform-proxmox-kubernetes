@@ -155,7 +155,7 @@ Lifecycle operations exercised beyond upgrades:
 - [talosctl](https://www.talos.dev/latest/talos-guides/install/talosctl) to manage the Talos cluster
 - [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) to manage Kubernetes (optional)
 
-> **Important:** Keep CLI tools up to date. Ensure `talosctl` matches your Talos version, especially before upgrades. Minimum Talos version: **v1.12.0**.
+> **Important:** Keep CLI tools up to date. Ensure `talosctl` matches your Talos version, especially before upgrades. Minimum Talos version: **v1.14.0**, because the generated machine configuration uses the Talos 1.14 configuration documents.
 
 ### Infrastructure Prerequisites
 
@@ -514,6 +514,8 @@ longhorn_default_storage_class = true
 
 Requires `storage_disk_size > 0` on all worker nodepools. A dedicated disk (`scsi1`) is provisioned, formatted, and mounted at `/var/lib/longhorn`.
 
+Following upstream module version 6 and the [Longhorn guidance for Talos Linux v1.10 and later](https://longhorn.io/docs/1.13.0/advanced-resources/os-distro-specific/talos-linux-support/#from-talos-linux-v110x-onwards), the module also creates a `UserVolumeConfig` named `longhorn` at `/var/mnt/longhorn` and sets it as Longhorn's default data path for new disks. In this port that directory lives on the `EPHEMERAL` partition of the system disk, not on the dedicated `scsi1` disk. Existing disks at `/var/lib/longhorn` keep working and are not migrated. Do not enable scheduling on a `/var/mnt/longhorn` disk unless the system disk is sized for it. How the dedicated disk will map to the new data path before the legacy path is removed is not decided yet.
+
 #### Piraeus / LINSTOR
 
 Piraeus provides DRBD-based replicated storage via the LINSTOR operator. **This module only prepares the nodes — it does not deploy Piraeus.** Install the Piraeus Operator yourself (e.g. via ArgoCD or Helm) after the cluster is up, then create your `LinstorCluster` / storage classes.
@@ -667,26 +669,29 @@ talos_extra_inline_manifests = [
 <details>
 <summary><b>OIDC Authentication</b></summary>
 
-Integrate with external identity providers (Keycloak, Auth0, Authentik, etc.):
+Integrate with one or more external identity providers (Keycloak, Auth0, Authentik, Zitadel, etc.). Each issuer must be unique. Configure multiple clients from the same issuer as audiences of a single provider; the module sets `MatchAny` when a provider has multiple audiences.
 
 ```hcl
-oidc_enabled        = true
-oidc_issuer_url     = "https://your-oidc-provider.com"
-oidc_client_id      = "your-client-id"
-oidc_username_claim = "preferred_username"
-oidc_groups_claim   = "groups"
-oidc_groups_prefix  = "oidc:"
+kube_api_oidc_providers = [
+  {
+    issuer_url     = "https://keycloak.example.com/realms/example"
+    audiences      = ["kubectl", "headlamp"]
+    username_claim = "preferred_username"
+    groups_claim   = "groups"
+    groups_prefix  = "oidc:"
 
-oidc_group_mappings = [
-  {
-    group         = "cluster-admins"
-    cluster_roles = ["cluster-admin"]
-  },
-  {
-    group         = "developers"
-    cluster_roles = ["view"]
-    roles = [
-      { name = "developer", namespace = "development" }
+    group_mappings = [
+      {
+        group         = "cluster-admins"
+        cluster_roles = ["cluster-admin"]
+      },
+      {
+        group         = "developers"
+        cluster_roles = ["view"]
+        roles = [
+          { name = "developer", namespace = "development" }
+        ]
+      }
     ]
   }
 ]
@@ -789,21 +794,23 @@ Talos and Kubernetes versions are managed by this module. Do not upgrade Talos o
 Control how machine configuration changes are applied:
 
 ```hcl
-talos_machine_configuration_apply_mode = "auto"  # auto | reboot | no_reboot | staged | staged_if_needing_reboot
+talos_machine_configuration_apply_mode = "auto"  # auto | no_reboot | staged | staged_if_needing_reboot
 ```
 
-> **Warning:** The default mode `auto` applies changes immediately and reboots nodes if required. For changes that trigger a reboot (e.g. CPU/memory changes), all affected nodes may reboot simultaneously, causing downtime. For production clusters, use `staged_if_needing_reboot` to get rolling reboots with health checks:
+> **Warning:** The default mode `auto` applies changes immediately and reboots nodes if required. For changes that trigger a reboot (e.g. CPU/memory changes), all affected nodes may reboot simultaneously, causing downtime.
+
+`staged_if_needing_reboot` performs a dry run per node. Changes that do not need a reboot are applied live, as in `auto` mode. Changes that need a reboot are staged and are **not** rebooted automatically; the nodes pick up the staged configuration at their next reboot, for example a manual `talosctl reboot` one node at a time.
+
+Plain `staged` stages **every** configuration change and, with `talos_staged_configuration_automatic_reboot_enabled = true` (the default), reboots the affected nodes one at a time, waiting for the cluster to become healthy in between:
 
 ```hcl
-talos_machine_configuration_apply_mode              = "staged_if_needing_reboot"
+talos_machine_configuration_apply_mode              = "staged"
 talos_staged_configuration_automatic_reboot_enabled = true # default
 ```
 
-This performs a dry-run per node: changes that need a reboot are staged and the nodes are then rebooted one at a time, waiting for the cluster to become healthy in between. Changes that do not need a reboot are applied live, as in `auto` mode.
+That means a reboot even for changes that would have applied live, such as a Kubernetes patch bump or a changed inline manifest. On clusters with a single control plane each such reboot is an API server outage.
 
-Plain `staged` behaves differently: **every** configuration change is staged, so every affected node is rebooted even when the change would have applied live — for example a Kubernetes patch bump or a changed inline manifest. On clusters with a single control plane that reboot is an API server outage, so prefer `staged_if_needing_reboot` unless you deliberately want a reboot on every change.
-
-Set `talos_staged_configuration_automatic_reboot_enabled = false` to stage changes without rebooting; the nodes then pick up the staged configuration at their next reboot, whenever that happens.
+Talos version upgrades are independent of these modes; they run through `talosctl upgrade` node by node.
 
 ### Scaling
 
@@ -899,6 +906,7 @@ No modules.
 | [talos_machine_secrets.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/resources/machine_secrets) | resource |
 | [terraform_data.create_kubeconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.create_talosconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [terraform_data.kube_api_ready](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.preflight](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.synchronize_manifests](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.talos_access_data](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
@@ -918,7 +926,6 @@ No modules.
 | [helm_template.talos_ccm](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/data-sources/template) | data source |
 | [proxmox_datastores.preflight](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/data-sources/datastores) | data source |
 | [talos_client_configuration.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/client_configuration) | data source |
-| [talos_cluster_health.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/cluster_health) | data source |
 | [talos_image_factory_extensions_versions.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/image_factory_extensions_versions) | data source |
 | [talos_image_factory_urls.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/image_factory_urls) | data source |
 | [talos_machine_configuration.control_plane](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/machine_configuration) | data source |
@@ -951,7 +958,7 @@ No modules.
 | <a name="input_cilium_gateway_api_proxy_protocol_enabled"></a> [cilium\_gateway\_api\_proxy\_protocol\_enabled](#input\_cilium\_gateway\_api\_proxy\_protocol\_enabled) | Enable PROXY Protocol on Cilium Gateway API for external load balancer traffic. | `bool` | `true` | no |
 | <a name="input_cilium_helm_chart"></a> [cilium\_helm\_chart](#input\_cilium\_helm\_chart) | Name of the Helm chart used for deploying Cilium. | `string` | `"cilium"` | no |
 | <a name="input_cilium_helm_repository"></a> [cilium\_helm\_repository](#input\_cilium\_helm\_repository) | URL of the Helm repository where the Cilium chart is located. | `string` | `"https://helm.cilium.io"` | no |
-| <a name="input_cilium_helm_values"></a> [cilium\_helm\_values](#input\_cilium\_helm\_values) | Custom Helm values for the Cilium chart deployment. These values will merge with and will override the default values provided by the Cilium Helm chart. | `any` | `{}` | no |
+| <a name="input_cilium_helm_values"></a> [cilium\_helm\_values](#input\_cilium\_helm\_values) | Custom Helm values for the Cilium chart deployment. These values are merged after the module-generated values and can override them as well as the Cilium chart defaults. | `any` | `{}` | no |
 | <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.20.4"` | no |
 | <a name="input_cilium_hubble_enabled"></a> [cilium\_hubble\_enabled](#input\_cilium\_hubble\_enabled) | Enables Hubble observability within Cilium, which may impact performance with an overhead of 1-15% depending on network traffic patterns and settings. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_relay_enabled"></a> [cilium\_hubble\_relay\_enabled](#input\_cilium\_hubble\_relay\_enabled) | Enables Hubble Relay, which requires Hubble to be enabled. | `bool` | `false` | no |
@@ -969,16 +976,17 @@ No modules.
 | <a name="input_client_prerequisites_check_enabled"></a> [client\_prerequisites\_check\_enabled](#input\_client\_prerequisites\_check\_enabled) | Controls whether a preflight check verifies that required client tools are installed before provisioning. | `bool` | `true` | no |
 | <a name="input_cluster_allow_scheduling_on_control_planes"></a> [cluster\_allow\_scheduling\_on\_control\_planes](#input\_cluster\_allow\_scheduling\_on\_control\_planes) | Allow scheduling on control plane nodes. If this is false, scheduling on control plane nodes is explicitly disabled. Defaults to true if there are no workers present. | `bool` | `null` | no |
 | <a name="input_cluster_domain"></a> [cluster\_domain](#input\_cluster\_domain) | Specifies the domain name used by the cluster. This domain name is integral for internal networking and service discovery within the cluster. The default is 'cluster.local', which is commonly used for local Kubernetes clusters. | `string` | `"cluster.local"` | no |
-| <a name="input_cluster_healthcheck_enabled"></a> [cluster\_healthcheck\_enabled](#input\_cluster\_healthcheck\_enabled) | Determines whether are executed during cluster deployment and upgrade. | `bool` | `true` | no |
+| <a name="input_cluster_healthcheck_enabled"></a> [cluster\_healthcheck\_enabled](#input\_cluster\_healthcheck\_enabled) | Determines whether to wait for the Kubernetes API to become ready after cluster deployment and upgrades. | `bool` | `true` | no |
 | <a name="input_cluster_kubeconfig_path"></a> [cluster\_kubeconfig\_path](#input\_cluster\_kubeconfig\_path) | If not null, the kubeconfig will be written to a file speficified. | `string` | `null` | no |
 | <a name="input_cluster_talosconfig_path"></a> [cluster\_talosconfig\_path](#input\_cluster\_talosconfig\_path) | If not null, the talosconfig will be written to a file speficified. | `string` | `null` | no |
 | <a name="input_control_plane_config_patches"></a> [control\_plane\_config\_patches](#input\_control\_plane\_config\_patches) | List of configuration patches applied to the Control Plane nodes. | `any` | `[]` | no |
 | <a name="input_gateway_api_crds_enabled"></a> [gateway\_api\_crds\_enabled](#input\_gateway\_api\_crds\_enabled) | Enables the Gateway API Custom Resource Definitions (CRDs) deployment. | `bool` | `true` | no |
 | <a name="input_gateway_api_crds_release_channel"></a> [gateway\_api\_crds\_release\_channel](#input\_gateway\_api\_crds\_release\_channel) | Specifies the release channel for the Gateway API CRDs. Valid options are 'standard' or 'experimental'. | `string` | `"standard"` | no |
 | <a name="input_gateway_api_crds_version"></a> [gateway\_api\_crds\_version](#input\_gateway\_api\_crds\_version) | Specifies the version of the Gateway API Custom Resource Definitions (CRDs) to deploy. | `string` | `"v1.6.1"` | no |
-| <a name="input_kube_api_admission_control"></a> [kube\_api\_admission\_control](#input\_kube\_api\_admission\_control) | List of admission control settings for the Kube API. If set, this overrides the default admission control. | `list(any)` | `[]` | no |
+| <a name="input_kube_api_admission_control"></a> [kube\_api\_admission\_control](#input\_kube\_api\_admission\_control) | List of additional admission control settings for the Kubernetes API server. | `list(any)` | `[]` | no |
 | <a name="input_kube_api_extra_args"></a> [kube\_api\_extra\_args](#input\_kube\_api\_extra\_args) | Specifies additional command-line arguments to be passed to the kube-apiserver. This allows for customization of the API server's behavior according to specific cluster requirements. | `map(string)` | `{}` | no |
 | <a name="input_kube_api_hostname"></a> [kube\_api\_hostname](#input\_kube\_api\_hostname) | Specifies the hostname for external access to the Kubernetes API server. This must be a valid domain name, set to the API's public IP address. | `string` | `null` | no |
+| <a name="input_kube_api_oidc_providers"></a> [kube\_api\_oidc\_providers](#input\_kube\_api\_oidc\_providers) | OIDC providers accepted by the Kubernetes API server, including their audiences, claim mappings, and Kubernetes RBAC group mappings. OIDC authentication is disabled when the list is empty. | <pre>list(object({<br/>    issuer_url            = string<br/>    discovery_url         = optional(string)<br/>    certificate_authority = optional(string)<br/>    audiences             = list(string)<br/>    username_claim        = optional(string, "sub")<br/>    username_prefix       = optional(string)<br/>    groups_claim          = optional(string, "groups")<br/>    groups_prefix         = optional(string, "oidc:")<br/>    group_mappings = optional(list(object({<br/>      group         = string<br/>      cluster_roles = optional(list(string), [])<br/>      roles = optional(list(object({<br/>        name      = string<br/>        namespace = string<br/>      })), [])<br/>    })), [])<br/>  }))</pre> | `[]` | no |
 | <a name="input_kubernetes_apiserver_image"></a> [kubernetes\_apiserver\_image](#input\_kubernetes\_apiserver\_image) | Specifies a custom image repository for kube-apiserver (e.g., 'my-registry.io/kube-apiserver'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_controller_manager_image"></a> [kubernetes\_controller\_manager\_image](#input\_kubernetes\_controller\_manager\_image) | Specifies a custom image repository for kube-controller-manager (e.g., 'my-registry.io/kube-controller-manager'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_etcd_image"></a> [kubernetes\_etcd\_image](#input\_kubernetes\_etcd\_image) | Specifies a custom container image for etcd including the tag and/or digest (e.g., 'my-registry.io/etcd:v3.6.8', 'my-registry.io/etcd:v3.6.8@sha256:...', or 'my-registry.io/etcd@sha256:...'). This change will only take effect after a manual reboot of your cluster nodes! | `string` | `null` | no |
@@ -987,7 +995,7 @@ No modules.
 | <a name="input_kubernetes_kubelet_image"></a> [kubernetes\_kubelet\_image](#input\_kubernetes\_kubelet\_image) | Specifies a custom image repository for the kubelet (e.g., 'my-registry.io/kubelet'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_proxy_image"></a> [kubernetes\_proxy\_image](#input\_kubernetes\_proxy\_image) | Specifies a custom image repository for kube-proxy (e.g., 'my-registry.io/kube-proxy'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
 | <a name="input_kubernetes_scheduler_image"></a> [kubernetes\_scheduler\_image](#input\_kubernetes\_scheduler\_image) | Specifies a custom image repository for kube-scheduler (e.g., 'my-registry.io/kube-scheduler'). The version tag is appended automatically from kubernetes\_version. When set, this image is used during both machine configuration and Kubernetes upgrades, preventing custom images from being reset to upstream defaults. | `string` | `null` | no |
-| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Specifies the Kubernetes version to deploy. | `string` | `"v1.34.12"` | no |
+| <a name="input_kubernetes_version"></a> [kubernetes\_version](#input\_kubernetes\_version) | Specifies the Kubernetes version to deploy. | `string` | `"v1.35.9"` | no |
 | <a name="input_longhorn_default_storage_class"></a> [longhorn\_default\_storage\_class](#input\_longhorn\_default\_storage\_class) | Set Longhorn as the default storage class. | `bool` | `false` | no |
 | <a name="input_longhorn_enabled"></a> [longhorn\_enabled](#input\_longhorn\_enabled) | Enable or disable Longhorn integration | `bool` | `false` | no |
 | <a name="input_longhorn_helm_chart"></a> [longhorn\_helm\_chart](#input\_longhorn\_helm\_chart) | Name of the Helm chart used for deploying Longhorn. | `string` | `"longhorn"` | no |
@@ -1005,14 +1013,9 @@ No modules.
 | <a name="input_network_native_routing_ipv4_cidr"></a> [network\_native\_routing\_ipv4\_cidr](#input\_network\_native\_routing\_ipv4\_cidr) | Specifies the IPv4 CIDR block that the CNI assumes will be routed natively by the underlying network infrastructure without the need for SNAT. | `string` | `null` | no |
 | <a name="input_network_node_ipv4_cidr"></a> [network\_node\_ipv4\_cidr](#input\_network\_node\_ipv4\_cidr) | Specifies the Node IPv4 CIDR used for allocating IP addresses to both Control Plane and Worker nodes within the cluster. If not explicitly provided, a default subnet is dynamically calculated from the specified network\_ipv4\_cidr. | `string` | `null` | no |
 | <a name="input_network_pod_ipv4_cidr"></a> [network\_pod\_ipv4\_cidr](#input\_network\_pod\_ipv4\_cidr) | Defines the Pod IPv4 CIDR block allocated for use by pods within the cluster. This CIDR block is essential for internal pod communications. If a specific subnet is not provided, a default is dynamically calculated from the network\_ipv4\_cidr. | `string` | `null` | no |
+| <a name="input_network_pod_ipv6_cidr"></a> [network\_pod\_ipv6\_cidr](#input\_network\_pod\_ipv6\_cidr) | Experimental, optional IPv6 Pod CIDR for dual-stack Kubernetes networking. Not supported for production use. Requires network\_service\_ipv6\_cidr. | `string` | `null` | no |
 | <a name="input_network_service_ipv4_cidr"></a> [network\_service\_ipv4\_cidr](#input\_network\_service\_ipv4\_cidr) | Specifies the Service IPv4 CIDR block used for allocating ClusterIPs to services within the cluster. If not provided, a default subnet is dynamically calculated from the specified network\_ipv4\_cidr. | `string` | `null` | no |
-| <a name="input_oidc_client_id"></a> [oidc\_client\_id](#input\_oidc\_client\_id) | OIDC client ID that all tokens must be issued for. Required when oidc\_enabled is true | `string` | `""` | no |
-| <a name="input_oidc_enabled"></a> [oidc\_enabled](#input\_oidc\_enabled) | Enable OIDC authentication for Kubernetes API server | `bool` | `false` | no |
-| <a name="input_oidc_group_mappings"></a> [oidc\_group\_mappings](#input\_oidc\_group\_mappings) | List of OIDC groups mapped to Kubernetes roles and cluster roles | <pre>list(object({<br/>    group         = string<br/>    cluster_roles = optional(list(string), [])<br/>    roles = optional(list(object({<br/>      name      = string<br/>      namespace = string<br/>    })), [])<br/>  }))</pre> | `[]` | no |
-| <a name="input_oidc_groups_claim"></a> [oidc\_groups\_claim](#input\_oidc\_groups\_claim) | JWT claim to use as the user's groups | `string` | `"groups"` | no |
-| <a name="input_oidc_groups_prefix"></a> [oidc\_groups\_prefix](#input\_oidc\_groups\_prefix) | Prefix prepended to group claims to prevent clashes with existing names | `string` | `"oidc:"` | no |
-| <a name="input_oidc_issuer_url"></a> [oidc\_issuer\_url](#input\_oidc\_issuer\_url) | URL of the OIDC provider (e.g., https://your-oidc-provider.com). Required when oidc\_enabled is true | `string` | `""` | no |
-| <a name="input_oidc_username_claim"></a> [oidc\_username\_claim](#input\_oidc\_username\_claim) | JWT claim to use as the username | `string` | `"sub"` | no |
+| <a name="input_network_service_ipv6_cidr"></a> [network\_service\_ipv6\_cidr](#input\_network\_service\_ipv6\_cidr) | Experimental, optional IPv6 Service CIDR for dual-stack Kubernetes networking. Not supported for production use. Requires network\_pod\_ipv6\_cidr. | `string` | `null` | no |
 | <a name="input_piraeus_enabled"></a> [piraeus\_enabled](#input\_piraeus\_enabled) | Prepares the cluster for Piraeus/LINSTOR storage: adds DRBD extension to the Talos image, loads DRBD kernel modules, and provisions a dedicated storage disk on worker nodes. The actual Piraeus Operator must be installed separately (e.g. via ArgoCD). | `bool` | `false` | no |
 | <a name="input_prometheus_operator_crds_enabled"></a> [prometheus\_operator\_crds\_enabled](#input\_prometheus\_operator\_crds\_enabled) | Enables the Prometheus Operator Custom Resource Definitions (CRDs) deployment. | `bool` | `true` | no |
 | <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.94.2"` | no |
@@ -1049,8 +1052,7 @@ No modules.
 | <a name="input_talos_ccm_helm_version"></a> [talos\_ccm\_helm\_version](#input\_talos\_ccm\_helm\_version) | Helm chart version for the Talos CCM. | `string` | `"0.5.6"` | no |
 | <a name="input_talos_certificates"></a> [talos\_certificates](#input\_talos\_certificates) | Additional trusted CA certificates to be added to the Talos configuration.<br/>Map keys are used as names for the TrustedRootsConfig documents.<br/>Values can be either a single PEM-encoded string containing one or more certificates (inline or from file), or a list of PEM-encoded strings.<br/><br/>Example:<pre>hcl<br/>talos_certificates = {<br/>  # Inline string (single certificate)<br/>  "inline-ca" = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"<br/><br/>  # Single certificate from file<br/>  "file-ca" = [file("ca.crt")]<br/><br/>  # Multiple certificates from files (chain)<br/>  "corporate-chain" = [file("root.crt"), file("intermediate.crt")]<br/><br/>  # Multiple inline certificates in a single string (backward compatible)<br/>  "legacy-ca" = <<-EOT<br/>    -----BEGIN CERTIFICATE-----<br/>    ...<br/>    -----END CERTIFICATE-----<br/>    -----BEGIN CERTIFICATE-----<br/>    ...<br/>    -----END CERTIFICATE-----<br/>  EOT<br/>}</pre> | `any` | `{}` | no |
 | <a name="input_talos_coredns_enabled"></a> [talos\_coredns\_enabled](#input\_talos\_coredns\_enabled) | Determines whether CoreDNS is enabled in the Talos cluster. When enabled, CoreDNS serves as the primary DNS service provider in Kubernetes. | `bool` | `true` | no |
-| <a name="input_talos_cri_discard_unpacked_layers"></a> [talos\_cri\_discard\_unpacked\_layers](#input\_talos\_cri\_discard\_unpacked\_layers) | Determines whether containerd discards unpacked image layers on all Talos nodes. Set to false to retain unpacked image layers. Attention: Changing this value forces all Talos nodes to reboot and should be performed with `talos_machine_configuration_apply_mode = "staged"`. | `bool` | `true` | no |
-| <a name="input_talos_discovery_kubernetes_enabled"></a> [talos\_discovery\_kubernetes\_enabled](#input\_talos\_discovery\_kubernetes\_enabled) | Enable or disable Kubernetes-based Talos discovery service. Deprecated as of Kubernetes v1.32, where the AuthorizeNodeWithSelectors feature gate is enabled by default. | `bool` | `false` | no |
+| <a name="input_talos_cri_discard_unpacked_layers"></a> [talos\_cri\_discard\_unpacked\_layers](#input\_talos\_cri\_discard\_unpacked\_layers) | Determines whether containerd discards unpacked image layers on all Talos nodes. Set to false to retain unpacked image layers. Changing this value restarts the CRI service on each node. | `bool` | `true` | no |
 | <a name="input_talos_discovery_service_enabled"></a> [talos\_discovery\_service\_enabled](#input\_talos\_discovery\_service\_enabled) | Enable or disable Sidero Labs public Talos discovery service. | `bool` | `true` | no |
 | <a name="input_talos_ephemeral_partition_encryption_enabled"></a> [talos\_ephemeral\_partition\_encryption\_enabled](#input\_talos\_ephemeral\_partition\_encryption\_enabled) | Enables or disables encryption for the ephemeral (`/var`) partition. Attention: Changing this value for an existing cluster requires manual actions as per Talos documentation (https://www.talos.dev/latest/talos-guides/configuration/disk-encryption). Ignoring this may break your cluster. | `bool` | `true` | no |
 | <a name="input_talos_extra_inline_manifests"></a> [talos\_extra\_inline\_manifests](#input\_talos\_extra\_inline\_manifests) | List of additional inline Kubernetes manifests to append to the Talos machine configuration during bootstrap. | <pre>list(object({<br/>    name     = string<br/>    contents = string<br/>  }))</pre> | `null` | no |
@@ -1062,14 +1064,14 @@ No modules.
 | <a name="input_talos_kernel_modules"></a> [talos\_kernel\_modules](#input\_talos\_kernel\_modules) | Defines a list of kernel modules to be loaded during system boot, along with optional parameters for each module. This allows for customized kernel behavior in the Talos environment. | <pre>list(object({<br/>    name       = string<br/>    parameters = optional(list(string))<br/>  }))</pre> | `null` | no |
 | <a name="input_talos_kubelet_extra_mounts"></a> [talos\_kubelet\_extra\_mounts](#input\_talos\_kubelet\_extra\_mounts) | Defines extra kubelet mounts for Talos with configurable 'source', 'destination' (defaults to 'source' if unset), 'type' (defaults to 'bind'), and 'options' (defaults to ['bind', 'rshared', 'rw']) | <pre>list(object({<br/>    source      = string<br/>    destination = optional(string)<br/>    type        = optional(string, "bind")<br/>    options     = optional(list(string), ["bind", "rshared", "rw"])<br/>  }))</pre> | `[]` | no |
 | <a name="input_talos_logging_destinations"></a> [talos\_logging\_destinations](#input\_talos\_logging\_destinations) | List of objects defining remote destinations for Talos service logs. | <pre>list(object({<br/>    endpoint  = string<br/>    format    = optional(string, "json_lines")<br/>    extraTags = optional(map(string), {})<br/>  }))</pre> | `[]` | no |
-| <a name="input_talos_machine_configuration_apply_mode"></a> [talos\_machine\_configuration\_apply\_mode](#input\_talos\_machine\_configuration\_apply\_mode) | Determines how changes to Talos machine configurations are applied. 'auto' (default) applies changes immediately and reboots if necessary. 'reboot' applies changes and then reboots the node. 'no\_reboot' applies changes immediately without a reboot, failing if a reboot is required. 'staged' stages changes to apply on the next reboot. 'staged\_if\_needing\_reboot' performs a dry-run and uses 'staged' mode if reboot is needed, 'auto' otherwise. | `string` | `"auto"` | no |
+| <a name="input_talos_machine_configuration_apply_mode"></a> [talos\_machine\_configuration\_apply\_mode](#input\_talos\_machine\_configuration\_apply\_mode) | Determines how changes to Talos machine configurations are applied. 'auto' (default) and 'no\_reboot' apply changes immediately without rebooting the node. 'staged' persists changes for the next reboot. | `string` | `"auto"` | no |
 | <a name="input_talos_nameservers"></a> [talos\_nameservers](#input\_talos\_nameservers) | Specifies a list of nameserver addresses used for DNS resolution by nodes and CoreDNS within the cluster. Falls back to the network gateway if empty. | `list(string)` | `[]` | no |
 | <a name="input_talos_ntp_servers"></a> [talos\_ntp\_servers](#input\_talos\_ntp\_servers) | Specifies a list of time server addresses used for network time synchronization across the cluster. These servers ensure that all cluster nodes maintain accurate and synchronized time. | `list(string)` | <pre>[<br/>  "0.pool.ntp.org",<br/>  "1.pool.ntp.org",<br/>  "2.pool.ntp.org"<br/>]</pre> | no |
 | <a name="input_talos_reboot_debug"></a> [talos\_reboot\_debug](#input\_talos\_reboot\_debug) | Enable debug operation from kernel logs during Talos reboots. When true, --wait is set to true by talosctl. | `bool` | `false` | no |
 | <a name="input_talos_reboot_mode"></a> [talos\_reboot\_mode](#input\_talos\_reboot\_mode) | Select the reboot mode. Mode "powercycle" bypasses kexec, and mode "force" skips graceful teardown. Valid values: "default", "powercycle", or "force". | `string` | `null` | no |
 | <a name="input_talos_registries"></a> [talos\_registries](#input\_talos\_registries) | Specifies a list of registry mirrors to be used for container image retrieval. This configuration helps in specifying alternate sources or local mirrors for image registries, enhancing reliability and speed of image downloads.<br/>Example configuration:<pre>registries = {<br/>  mirrors = {<br/>    "docker.io" = {<br/>      endpoints = [<br/>        "http://localhost:5000",<br/>        "https://docker.io"<br/>      ]<br/>    }<br/>  }<br/>}</pre> | `any` | `null` | no |
-| <a name="input_talos_schematic_id"></a> [talos\_schematic\_id](#input\_talos\_schematic\_id) | Specifies the Talos schematic ID used for selecting the specific Image and Installer versions in deployments. This has precedence over `talos_image_extensions` | `string` | `null` | no |
-| <a name="input_talos_staged_configuration_automatic_reboot_enabled"></a> [talos\_staged\_configuration\_automatic\_reboot\_enabled](#input\_talos\_staged\_configuration\_automatic\_reboot\_enabled) | Determines whether nodes are rebooted automatically after Talos machine configuration changes are applied in 'staged' mode, or when 'staged\_if\_needing\_reboot' resolves to 'staged' mode. | `bool` | `true` | no |
+| <a name="input_talos_schematic_id"></a> [talos\_schematic\_id](#input\_talos\_schematic\_id) | Specifies the Talos schematic ID used for selecting the specific Image and Installer versions in deployments. This has precedence over `talos_image_extensions`. Extra kernel arguments must be included in the custom schematic instead of `talos_extra_kernel_args`. | `string` | `null` | no |
+| <a name="input_talos_staged_configuration_automatic_reboot_enabled"></a> [talos\_staged\_configuration\_automatic\_reboot\_enabled](#input\_talos\_staged\_configuration\_automatic\_reboot\_enabled) | Determines whether nodes are rebooted automatically after Talos machine configuration changes are applied in 'staged' mode. | `bool` | `true` | no |
 | <a name="input_talos_state_partition_encryption_enabled"></a> [talos\_state\_partition\_encryption\_enabled](#input\_talos\_state\_partition\_encryption\_enabled) | Enables or disables encryption for the state (`/system/state`) partition. Attention: Changing this value for an existing cluster requires manual actions as per Talos documentation (https://www.talos.dev/latest/talos-guides/configuration/disk-encryption). Ignoring this may break your cluster. | `bool` | `true` | no |
 | <a name="input_talos_static_hosts"></a> [talos\_static\_hosts](#input\_talos\_static\_hosts) | Specifies static host mappings to be added on each node. Each entry must include an IP address and a list of hostnames associated with that IP. | <pre>list(object({<br/>    ip        = string<br/>    hostnames = list(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_talos_sysctls_extra_args"></a> [talos\_sysctls\_extra\_args](#input\_talos\_sysctls\_extra\_args) | Specifies a map of sysctl key-value pairs for configuring additional kernel parameters. These settings allow for detailed customization of the operating system's behavior at runtime. | `map(string)` | `{}` | no |
@@ -1081,7 +1083,7 @@ No modules.
 | <a name="input_talos_upgrade_insecure"></a> [talos\_upgrade\_insecure](#input\_talos\_upgrade\_insecure) | Upgrade using the insecure (no auth) maintenance service. | `bool` | `false` | no |
 | <a name="input_talos_upgrade_reboot_mode"></a> [talos\_upgrade\_reboot\_mode](#input\_talos\_upgrade\_reboot\_mode) | Select the reboot mode during upgrade. Mode "powercycle" bypasses kexec. Valid values: "default" or "powercycle". | `string` | `null` | no |
 | <a name="input_talos_upgrade_stage"></a> [talos\_upgrade\_stage](#input\_talos\_upgrade\_stage) | Stage the Talos upgrade to perform it after a reboot. | `bool` | `false` | no |
-| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.13.10"` | no |
+| <a name="input_talos_version"></a> [talos\_version](#input\_talos\_version) | Specifies the version of Talos to be used in generated machine configurations. | `string` | `"v1.14.4"` | no |
 | <a name="input_talosctl_retries"></a> [talosctl\_retries](#input\_talosctl\_retries) | Specifies how many times talosctl operations should retry before failing. This setting helps improve resilience against transient network issues or temporary API unavailability. | `number` | `100` | no |
 | <a name="input_talosctl_version_check_enabled"></a> [talosctl\_version\_check\_enabled](#input\_talosctl\_version\_check\_enabled) | Controls whether a preflight check verifies the local talosctl client version before provisioning. | `bool` | `true` | no |
 | <a name="input_worker_config_patches"></a> [worker\_config\_patches](#input\_worker\_config\_patches) | List of configuration patches applied to the Worker nodes. | `any` | `[]` | no |

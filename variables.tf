@@ -45,7 +45,7 @@ variable "cluster_talosconfig_path" {
 variable "cluster_healthcheck_enabled" {
   type        = bool
   default     = true
-  description = "Determines whether are executed during cluster deployment and upgrade."
+  description = "Determines whether to wait for the Kubernetes API to become ready after cluster deployment and upgrades."
 }
 
 variable "cluster_allow_scheduling_on_control_planes" {
@@ -145,10 +145,42 @@ variable "network_service_ipv4_cidr" {
   description = "Specifies the Service IPv4 CIDR block used for allocating ClusterIPs to services within the cluster. If not provided, a default subnet is dynamically calculated from the specified network_ipv4_cidr."
 }
 
+variable "network_service_ipv6_cidr" {
+  type        = string
+  default     = null
+  description = "Experimental, optional IPv6 Service CIDR for dual-stack Kubernetes networking. Not supported for production use. Requires network_pod_ipv6_cidr."
+
+  validation {
+    condition     = var.network_service_ipv6_cidr == null || (can(cidrhost(var.network_service_ipv6_cidr, 0)) && can(regex(":", var.network_service_ipv6_cidr)))
+    error_message = "network_service_ipv6_cidr must be a valid IPv6 CIDR."
+  }
+}
+
 variable "network_pod_ipv4_cidr" {
   type        = string
   default     = null # 10.0.128.0/17 when network_ipv4_cidr is 10.0.0.0/16
   description = "Defines the Pod IPv4 CIDR block allocated for use by pods within the cluster. This CIDR block is essential for internal pod communications. If a specific subnet is not provided, a default is dynamically calculated from the network_ipv4_cidr."
+}
+
+variable "network_pod_ipv6_cidr" {
+  type        = string
+  default     = null
+  description = "Experimental, optional IPv6 Pod CIDR for dual-stack Kubernetes networking. Not supported for production use. Requires network_service_ipv6_cidr."
+
+  validation {
+    condition     = var.network_pod_ipv6_cidr == null || (can(cidrhost(var.network_pod_ipv6_cidr, 0)) && can(regex(":", var.network_pod_ipv6_cidr)))
+    error_message = "network_pod_ipv6_cidr must be a valid IPv6 CIDR."
+  }
+
+  validation {
+    condition     = (var.network_pod_ipv6_cidr == null) == (var.network_service_ipv6_cidr == null)
+    error_message = "network_pod_ipv6_cidr and network_service_ipv6_cidr must either both be set or both be omitted."
+  }
+
+  validation {
+    condition     = var.network_pod_ipv6_cidr == null || var.talos_ipv6_enabled
+    error_message = "talos_ipv6_enabled must be true when IPv6 Pod networking is enabled."
+  }
 }
 
 variable "network_native_routing_ipv4_cidr" {
@@ -172,7 +204,7 @@ variable "network_gateway" {
 variable "kube_api_admission_control" {
   type        = list(any)
   default     = []
-  description = "List of admission control settings for the Kube API. If set, this overrides the default admission control."
+  description = "List of additional admission control settings for the Kubernetes API server."
 }
 
 variable "control_plane_nodepools" {
@@ -269,14 +301,19 @@ variable "worker_config_patches" {
 # Talos
 variable "talos_version" {
   type        = string
-  default     = "v1.13.10" # https://github.com/siderolabs/talos
+  default     = "v1.14.4" # https://github.com/siderolabs/talos
   description = "Specifies the version of Talos to be used in generated machine configurations."
 }
 
 variable "talos_schematic_id" {
   type        = string
   default     = null
-  description = "Specifies the Talos schematic ID used for selecting the specific Image and Installer versions in deployments. This has precedence over `talos_image_extensions`"
+  description = "Specifies the Talos schematic ID used for selecting the specific Image and Installer versions in deployments. This has precedence over `talos_image_extensions`. Extra kernel arguments must be included in the custom schematic instead of `talos_extra_kernel_args`."
+
+  validation {
+    condition     = var.talos_schematic_id == null || length(var.talos_extra_kernel_args) == 0
+    error_message = "talos_extra_kernel_args cannot be used with talos_schematic_id because the module cannot add kernel arguments to a custom schematic. Include the arguments in the custom schematic instead."
+  }
 }
 
 variable "talos_image_extensions" {
@@ -375,12 +412,6 @@ variable "talos_upgrade_stage" {
   description = "Stage the Talos upgrade to perform it after a reboot."
 }
 
-variable "talos_discovery_kubernetes_enabled" {
-  type        = bool
-  default     = false
-  description = "Enable or disable Kubernetes-based Talos discovery service. Deprecated as of Kubernetes v1.32, where the AuthorizeNodeWithSelectors feature gate is enabled by default."
-}
-
 variable "talos_discovery_service_enabled" {
   type        = bool
   default     = true
@@ -390,7 +421,7 @@ variable "talos_discovery_service_enabled" {
 variable "talos_cri_discard_unpacked_layers" {
   type        = bool
   default     = true
-  description = "Determines whether containerd discards unpacked image layers on all Talos nodes. Set to false to retain unpacked image layers. Attention: Changing this value forces all Talos nodes to reboot and should be performed with `talos_machine_configuration_apply_mode = \"staged\"`."
+  description = "Determines whether containerd discards unpacked image layers on all Talos nodes. Set to false to retain unpacked image layers. Changing this value restarts the CRI service on each node."
 }
 
 variable "talos_kubelet_extra_mounts" {
@@ -407,9 +438,10 @@ variable "talos_kubelet_extra_mounts" {
     condition = (
       length(var.talos_kubelet_extra_mounts) ==
       length(toset([for mount in var.talos_kubelet_extra_mounts : coalesce(mount.destination, mount.source)])) &&
+      (!var.longhorn_enabled || !contains([for mount in var.talos_kubelet_extra_mounts : coalesce(mount.destination, mount.source)], "/var/mnt/longhorn")) &&
       (!var.longhorn_enabled || !contains([for mount in var.talos_kubelet_extra_mounts : coalesce(mount.destination, mount.source)], "/var/lib/longhorn"))
     )
-    error_message = "Each destination in talos_kubelet_extra_mounts must be unique and cannot include the Longhorn default data path if Longhorn is enabled."
+    error_message = "Each destination in talos_kubelet_extra_mounts must be unique and cannot duplicate a Longhorn data path managed by this module."
   }
 }
 
@@ -431,18 +463,18 @@ variable "talos_kernel_modules" {
 variable "talos_machine_configuration_apply_mode" {
   type        = string
   default     = "auto"
-  description = "Determines how changes to Talos machine configurations are applied. 'auto' (default) applies changes immediately and reboots if necessary. 'reboot' applies changes and then reboots the node. 'no_reboot' applies changes immediately without a reboot, failing if a reboot is required. 'staged' stages changes to apply on the next reboot. 'staged_if_needing_reboot' performs a dry-run and uses 'staged' mode if reboot is needed, 'auto' otherwise."
+  description = "Determines how changes to Talos machine configurations are applied. 'auto' (default) and 'no_reboot' apply changes immediately without rebooting the node. 'staged' persists changes for the next reboot."
 
   validation {
-    condition     = contains(["auto", "reboot", "no_reboot", "staged", "staged_if_needing_reboot"], var.talos_machine_configuration_apply_mode)
-    error_message = "The talos_machine_configuration_apply_mode must be 'auto', 'reboot', 'no_reboot', 'staged', or 'staged_if_needing_reboot'."
+    condition     = contains(["auto", "no_reboot", "staged"], var.talos_machine_configuration_apply_mode)
+    error_message = "The talos_machine_configuration_apply_mode must be 'auto', 'no_reboot', or 'staged'."
   }
 }
 
 variable "talos_staged_configuration_automatic_reboot_enabled" {
   type        = bool
   default     = true
-  description = "Determines whether nodes are rebooted automatically after Talos machine configuration changes are applied in 'staged' mode, or when 'staged_if_needing_reboot' resolves to 'staged' mode."
+  description = "Determines whether nodes are rebooted automatically after Talos machine configuration changes are applied in 'staged' mode."
 }
 
 variable "talos_sysctls_extra_args" {
@@ -692,7 +724,7 @@ variable "talos_backup_schedule" {
 # Kubernetes
 variable "kubernetes_version" {
   type        = string
-  default     = "v1.34.12" # https://github.com/kubernetes/kubernetes
+  default     = "v1.35.9" # https://github.com/kubernetes/kubernetes
   description = "Specifies the Kubernetes version to deploy."
 }
 
@@ -873,69 +905,101 @@ variable "proxmox_ccm_helm_values" {
 
 
 # Kubernetes OIDC Configuration
-variable "oidc_enabled" {
-  description = "Enable OIDC authentication for Kubernetes API server"
-  type        = bool
-  default     = false
-}
-
-variable "oidc_issuer_url" {
-  description = "URL of the OIDC provider (e.g., https://your-oidc-provider.com). Required when oidc_enabled is true"
-  type        = string
-  default     = ""
-
-  validation {
-    condition     = var.oidc_enabled == false || (var.oidc_enabled == true && var.oidc_issuer_url != "")
-    error_message = "oidc_issuer_url is required when oidc_enabled is true."
-  }
-}
-
-variable "oidc_client_id" {
-  description = "OIDC client ID that all tokens must be issued for. Required when oidc_enabled is true"
-  type        = string
-  default     = ""
-
-  validation {
-    condition     = var.oidc_enabled == false || (var.oidc_enabled == true && var.oidc_client_id != "")
-    error_message = "oidc_client_id is required when oidc_enabled is true."
-  }
-}
-
-variable "oidc_username_claim" {
-  description = "JWT claim to use as the username"
-  type        = string
-  default     = "sub"
-}
-
-variable "oidc_groups_claim" {
-  description = "JWT claim to use as the user's groups"
-  type        = string
-  default     = "groups"
-}
-
-variable "oidc_groups_prefix" {
-  description = "Prefix prepended to group claims to prevent clashes with existing names"
-  type        = string
-  default     = "oidc:"
-}
-
-variable "oidc_group_mappings" {
-  description = "List of OIDC groups mapped to Kubernetes roles and cluster roles"
+variable "kube_api_oidc_providers" {
+  description = "OIDC providers accepted by the Kubernetes API server, including their audiences, claim mappings, and Kubernetes RBAC group mappings. OIDC authentication is disabled when the list is empty."
   type = list(object({
-    group         = string
-    cluster_roles = optional(list(string), [])
-    roles = optional(list(object({
-      name      = string
-      namespace = string
+    issuer_url            = string
+    discovery_url         = optional(string)
+    certificate_authority = optional(string)
+    audiences             = list(string)
+    username_claim        = optional(string, "sub")
+    username_prefix       = optional(string)
+    groups_claim          = optional(string, "groups")
+    groups_prefix         = optional(string, "oidc:")
+    group_mappings = optional(list(object({
+      group         = string
+      cluster_roles = optional(list(string), [])
+      roles = optional(list(object({
+        name      = string
+        namespace = string
+      })), [])
     })), [])
   }))
   default = []
 
   validation {
-    condition = length(var.oidc_group_mappings) == length(distinct([
-      for mapping in var.oidc_group_mappings : mapping.group
+    condition     = length(var.kube_api_oidc_providers) <= 64
+    error_message = "At most 64 OIDC providers can be configured."
+  }
+
+  validation {
+    condition = alltrue([
+      for provider in var.kube_api_oidc_providers : startswith(provider.issuer_url, "https://")
+    ])
+    error_message = "Each OIDC issuer URL must use HTTPS."
+  }
+
+  validation {
+    condition = length(var.kube_api_oidc_providers) == length(distinct([
+      for provider in var.kube_api_oidc_providers : provider.issuer_url
     ]))
-    error_message = "OIDC group names must be unique. Duplicate group names found."
+    error_message = "OIDC issuer URLs must be unique. Use multiple audiences for clients that share an issuer."
+  }
+
+  validation {
+    condition = alltrue([
+      for provider in var.kube_api_oidc_providers : (
+        provider.discovery_url == null ? true : (
+          startswith(provider.discovery_url, "https://") &&
+          provider.discovery_url != provider.issuer_url
+        )
+      )
+    ])
+    error_message = "Each OIDC discovery URL must use HTTPS and differ from its issuer URL."
+  }
+
+  validation {
+    condition = alltrue([
+      for provider in var.kube_api_oidc_providers : (
+        provider.discovery_url == null || length([
+          for candidate in var.kube_api_oidc_providers : candidate
+          if candidate.discovery_url == provider.discovery_url
+        ]) == 1
+      )
+    ])
+    error_message = "OIDC discovery URLs must be unique."
+  }
+
+  validation {
+    condition = alltrue([
+      for provider in var.kube_api_oidc_providers : (
+        length(provider.audiences) > 0 &&
+        length(provider.audiences) == length(distinct(provider.audiences)) &&
+        alltrue([for audience in provider.audiences : length(audience) > 0])
+      )
+    ])
+    error_message = "Each OIDC provider must define at least one non-empty, unique audience."
+  }
+
+  validation {
+    condition = alltrue([
+      for provider in var.kube_api_oidc_providers : (
+        length(provider.username_claim) > 0 &&
+        length(provider.groups_claim) > 0
+      )
+    ])
+    error_message = "OIDC username and groups claims must not be empty."
+  }
+
+  validation {
+    condition = alltrue([
+      for provider in var.kube_api_oidc_providers : (
+        length(provider.group_mappings) == length(distinct([
+          for mapping in provider.group_mappings : mapping.group
+        ]))
+      )
+    ])
+    error_message = "OIDC group names must be unique within each provider."
   }
 }
 
@@ -1075,7 +1139,7 @@ variable "cilium_helm_version" {
 variable "cilium_helm_values" {
   type        = any
   default     = {}
-  description = "Custom Helm values for the Cilium chart deployment. These values will merge with and will override the default values provided by the Cilium Helm chart."
+  description = "Custom Helm values for the Cilium chart deployment. These values are merged after the module-generated values and can override them as well as the Cilium chart defaults."
 }
 
 variable "cilium_policy_cidr_match_mode" {
