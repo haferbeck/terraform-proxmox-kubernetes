@@ -899,7 +899,6 @@ No modules.
 | [terraform_data.create_kubeconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.create_talosconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.preflight](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [terraform_data.kube_api_ready](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.synchronize_manifests](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.talos_access_data](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.talos_staged_configuration_reboot_control_plane](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
@@ -918,6 +917,7 @@ No modules.
 | [helm_template.talos_ccm](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/data-sources/template) | data source |
 | [proxmox_datastores.preflight](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/data-sources/datastores) | data source |
 | [talos_client_configuration.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/client_configuration) | data source |
+| [talos_cluster_health.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/cluster_health) | data source |
 | [talos_image_factory_extensions_versions.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/image_factory_extensions_versions) | data source |
 | [talos_image_factory_urls.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/image_factory_urls) | data source |
 | [talos_machine_configuration.control_plane](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/machine_configuration) | data source |
@@ -968,7 +968,7 @@ No modules.
 | <a name="input_client_prerequisites_check_enabled"></a> [client\_prerequisites\_check\_enabled](#input\_client\_prerequisites\_check\_enabled) | Controls whether a preflight check verifies that required client tools are installed before provisioning. | `bool` | `true` | no |
 | <a name="input_cluster_allow_scheduling_on_control_planes"></a> [cluster\_allow\_scheduling\_on\_control\_planes](#input\_cluster\_allow\_scheduling\_on\_control\_planes) | Allow scheduling on control plane nodes. If this is false, scheduling on control plane nodes is explicitly disabled. Defaults to true if there are no workers present. | `bool` | `null` | no |
 | <a name="input_cluster_domain"></a> [cluster\_domain](#input\_cluster\_domain) | Specifies the domain name used by the cluster. This domain name is integral for internal networking and service discovery within the cluster. The default is 'cluster.local', which is commonly used for local Kubernetes clusters. | `string` | `"cluster.local"` | no |
-| <a name="input_cluster_healthcheck_enabled"></a> [cluster\_healthcheck\_enabled](#input\_cluster\_healthcheck\_enabled) | Determines whether to wait for the Kubernetes API to become ready after cluster deployment and upgrades. | `bool` | `true` | no |
+| <a name="input_cluster_healthcheck_enabled"></a> [cluster\_healthcheck\_enabled](#input\_cluster\_healthcheck\_enabled) | Determines whether are executed during cluster deployment and upgrade. | `bool` | `true` | no |
 | <a name="input_cluster_kubeconfig_path"></a> [cluster\_kubeconfig\_path](#input\_cluster\_kubeconfig\_path) | If not null, the kubeconfig will be written to a file speficified. | `string` | `null` | no |
 | <a name="input_cluster_talosconfig_path"></a> [cluster\_talosconfig\_path](#input\_cluster\_talosconfig\_path) | If not null, the talosconfig will be written to a file speficified. | `string` | `null` | no |
 | <a name="input_control_plane_config_patches"></a> [control\_plane\_config\_patches](#input\_control\_plane\_config\_patches) | List of configuration patches applied to the Control Plane nodes. | `any` | `[]` | no |

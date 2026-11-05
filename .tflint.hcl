@@ -21,8 +21,9 @@ rule "terraform_deprecated_interpolation" {
 }
 
 # upstream declares `local.talos_api_port` (consumed by firewall.tf which
-# is removed in the Proxmox port) and `local.network_node_ipv4_cidr` (used by
-# multiple files including ingress_nginx.tf which is also removed).
+# is removed in the Proxmox port), `local.network_node_ipv4_cidr` (used by
+# multiple files including ingress_nginx.tf which is also removed), and
+# `data.talos_cluster_health.this` (read for side-effect health checks).
 rule "terraform_unused_declarations" {
   enabled = false
 }

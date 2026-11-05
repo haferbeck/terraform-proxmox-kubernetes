@@ -383,58 +383,21 @@ resource "terraform_data" "talos_access_data" {
 # Health Check
 ###############################################################################
 
-resource "terraform_data" "kube_api_ready" {
+data "talos_cluster_health" "this" {
   count = var.cluster_healthcheck_enabled ? 1 : 0
 
-  triggers_replace = {
-    endpoint           = "${terraform_data.talos_access_data.output.kube_api_url}/readyz"
-    bootstrap          = talos_machine_bootstrap.this.id
-    talos_upgrade      = terraform_data.upgrade_control_plane.id
-    kubernetes_upgrade = terraform_data.upgrade_kubernetes.id
-    manifests          = terraform_data.synchronize_manifests.id
-    control_plane_configuration = nonsensitive(sha1(jsonencode({
-      for name, configuration in data.talos_machine_configuration.control_plane :
-      name => configuration.machine_configuration
-    })))
+  client_configuration   = talos_machine_secrets.this.client_configuration
+  endpoints              = terraform_data.talos_access_data.output.endpoints
+  control_plane_nodes    = terraform_data.talos_access_data.output.control_plane_nodes
+  worker_nodes           = terraform_data.talos_access_data.output.worker_nodes
+  skip_kubernetes_checks = false
+
+  timeouts = {
+    read = "10m"
   }
 
-  provisioner "local-exec" {
-    when    = create
-    quiet   = true
-    command = <<-EOT
-      set -eu
-
-      printf 'Waiting for Kubernetes API to become ready\n'
-
-      for attempt in $(seq 1 100); do
-        status=$(curl -ksS -o /dev/null -w '%%{http_code}' \
-          --connect-timeout 5 \
-          --max-time 5 \
-          "$KUBE_API_READY_URL" || true)
-
-        case "$status" in
-          200)
-            break
-            ;;
-          *)
-            printf 'Kubernetes API is not ready yet, waiting (%s/100)\n' "$attempt"
-            sleep 10
-            ;;
-        esac
-      done
-
-      if [ "$status" != "200" ]; then
-        printf 'Kubernetes API did not become ready after retries, last HTTP status: %s\n' "$status" >&2
-        exit 1
-      fi
-
-      printf 'Kubernetes API is ready\n'
-    EOT
-
-    environment = {
-      KUBE_API_READY_URL = self.triggers_replace.endpoint
-    }
-  }
-
-  depends_on = [terraform_data.synchronize_manifests]
+  depends_on = [
+    terraform_data.synchronize_manifests,
+    talos_machine_bootstrap.this,
+  ]
 }

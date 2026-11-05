@@ -45,7 +45,7 @@ variable "cluster_talosconfig_path" {
 variable "cluster_healthcheck_enabled" {
   type        = bool
   default     = true
-  description = "Determines whether to wait for the Kubernetes API to become ready after cluster deployment and upgrades."
+  description = "Determines whether are executed during cluster deployment and upgrade."
 }
 
 variable "cluster_allow_scheduling_on_control_planes" {
