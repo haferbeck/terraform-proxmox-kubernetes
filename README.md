@@ -117,7 +117,7 @@ Every release is deployed and upgraded in place on the maintainer's reference cl
 | Topology | 1 control plane + 3 workers as the steady state; multi-control-plane setups exercised during testing |
 | Storage | LVM-Thin (`local-lvm`) for VM disks, Directory (`local`) for the Talos ISO, plus one dedicated raw disk per worker |
 | Network | one Linux bridge with a VLAN tag, addresses assigned via cloud-init, Kubernetes API on the Talos Layer2 VIP |
-| Enabled options | Piraeus node preparation, Cilium L2 Announcements, extra Talos image extension, `staged_if_needing_reboot` apply mode, WireGuard encryption and LUKS2 partition encryption (defaults) |
+| Enabled options | Piraeus node preparation, Cilium L2 Announcements, extra Talos image extension, WireGuard encryption and LUKS2 partition encryption (defaults) |
 | Disabled options | Gateway API CRDs and Prometheus Operator CRDs (owned by other components in that cluster), Longhorn, cert-manager |
 
 Version combinations exercised so far:
@@ -526,7 +526,7 @@ piraeus_enabled = true
 
 This will:
 - Add `siderolabs/drbd` and `siderolabs/util-linux-tools` extensions to the Talos image
-- Load the `drbd` (with `usermode_helper=disabled`) and `dm-thin-pool` kernel modules
+- Load the `drbd` (with `usermode_helper=disabled`), `drbd_transport_tcp` and `dm-thin-pool` kernel modules
 - Provision a dedicated raw storage disk (`scsi1`) on worker nodes, left unformatted for LINSTOR
 
 Requires `storage_disk_size > 0` on all worker nodepools. Piraeus and Longhorn cannot both be enabled.
@@ -794,14 +794,12 @@ Talos and Kubernetes versions are managed by this module. Do not upgrade Talos o
 Control how machine configuration changes are applied:
 
 ```hcl
-talos_machine_configuration_apply_mode = "auto"  # auto | no_reboot | staged | staged_if_needing_reboot
+talos_machine_configuration_apply_mode = "auto"  # auto | no_reboot | staged
 ```
 
-> **Warning:** The default mode `auto` applies changes immediately and reboots nodes if required. For changes that trigger a reboot (e.g. CPU/memory changes), all affected nodes may reboot simultaneously, causing downtime.
+The default mode `auto` and `no_reboot` apply changes immediately without rebooting the node. Talos 1.14 dropped the `reboot` apply mode, and the module dropped `staged_if_needing_reboot` with it.
 
-`staged_if_needing_reboot` performs a dry run per node. Changes that do not need a reboot are applied live, as in `auto` mode. Changes that need a reboot are staged and are **not** rebooted automatically; the nodes pick up the staged configuration at their next reboot, for example a manual `talosctl reboot` one node at a time.
-
-Plain `staged` stages **every** configuration change and, with `talos_staged_configuration_automatic_reboot_enabled = true` (the default), reboots the affected nodes one at a time, waiting for the cluster to become healthy in between:
+`staged` stages **every** configuration change and, with `talos_staged_configuration_automatic_reboot_enabled = true` (the default), reboots the affected nodes one at a time, waiting for the cluster to become healthy in between:
 
 ```hcl
 talos_machine_configuration_apply_mode              = "staged"

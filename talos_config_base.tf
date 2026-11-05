@@ -213,6 +213,11 @@ locals {
       parameters = ["usermode_helper=disabled"]
     },
     {
+      # Talos 1.14 no longer loads the DRBD TCP transport on demand
+      name       = "drbd_transport_tcp"
+      parameters = []
+    },
+    {
       name       = "dm-thin-pool"
       parameters = []
     },
