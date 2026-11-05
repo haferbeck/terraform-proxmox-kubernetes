@@ -171,6 +171,21 @@ locals {
     },
   ]) : tolist([])
 
+  # Tailscale
+  talos_tailscale_environment = concat(
+    var.talos_tailscale_environment,
+    var.talos_tailscale_auth_key != null ? ["TS_AUTHKEY=${var.talos_tailscale_auth_key}"] : []
+  )
+
+  talos_tailscale_config_patches = var.talos_tailscale_enabled ? [
+    {
+      apiVersion  = "v1alpha1"
+      kind        = "ExtensionServiceConfig"
+      name        = "tailscale"
+      environment = local.talos_tailscale_environment
+    }
+  ] : []
+
   # Talos Common Config — platform-independent patches
   talos_common_config_patches = concat(
     [{
@@ -239,6 +254,7 @@ locals {
         discovery = local.talos_discovery
       }
     }],
+    local.talos_tailscale_config_patches,
     local.talos_system_volume_config_patches,
     [local.talos_resolver_config_patch],
     [local.talos_time_sync_config_patch],

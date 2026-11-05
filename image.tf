@@ -18,6 +18,7 @@ locals {
     concat(
       ["siderolabs/qemu-guest-agent"],
       var.talos_image_extensions,
+      var.talos_tailscale_enabled ? ["siderolabs/tailscale"] : [],
       var.longhorn_enabled ? local.talos_image_extensions_longhorn : [],
       var.piraeus_enabled ? local.talos_image_extensions_piraeus : []
     )

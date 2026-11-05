@@ -45,7 +45,7 @@ variable "cluster_talosconfig_path" {
 variable "cluster_healthcheck_enabled" {
   type        = bool
   default     = true
-  description = "Determines whether are executed during cluster deployment and upgrade."
+  description = "Determines whether to wait for the Kubernetes API to become ready after cluster deployment and upgrades."
 }
 
 variable "cluster_allow_scheduling_on_control_planes" {
@@ -283,6 +283,33 @@ variable "talos_image_extensions" {
   type        = list(string)
   default     = []
   description = "Specifies Talos image extensions for additional functionality on top of the default Talos Linux capabilities. See: https://github.com/siderolabs/extensions"
+}
+
+variable "talos_tailscale_enabled" {
+  type        = bool
+  default     = false
+  description = "Enable the Talos Tailscale system extension on every cluster node."
+}
+
+variable "talos_tailscale_auth_key" {
+  type        = string
+  default     = null
+  sensitive   = true
+  description = "Tailscale auth key passed to the Talos Tailscale extension as TS_AUTHKEY."
+}
+
+variable "talos_tailscale_environment" {
+  type        = list(string)
+  default     = []
+  description = "Environment entries passed to the Talos Tailscale extension in KEY=VALUE format. See: https://github.com/siderolabs/extensions/tree/main/network/tailscale#configuration"
+
+  validation {
+    condition = alltrue([
+      for entry in var.talos_tailscale_environment :
+      can(regex("^[A-Za-z_][A-Za-z0-9_]*=", entry))
+    ])
+    error_message = "Each talos_tailscale_environment entry must use KEY=VALUE format."
+  }
 }
 
 variable "talos_iso_checksum" {
@@ -1041,7 +1068,7 @@ variable "cilium_helm_chart" {
 
 variable "cilium_helm_version" {
   type        = string
-  default     = "1.20.2"
+  default     = "1.20.4"
   description = "Version of the Cilium Helm chart to deploy."
 }
 
@@ -1292,7 +1319,7 @@ variable "cert_manager_helm_chart" {
 
 variable "cert_manager_helm_version" {
   type        = string
-  default     = "v1.21.2"
+  default     = "v1.21.3"
   description = "Version of the Cert Manager Helm chart to deploy."
 }
 
@@ -1343,6 +1370,6 @@ variable "prometheus_operator_crds_enabled" {
 
 variable "prometheus_operator_crds_version" {
   type        = string
-  default     = "v0.94.1" # https://github.com/prometheus-operator/prometheus-operator
+  default     = "v0.94.2" # https://github.com/prometheus-operator/prometheus-operator
   description = "Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy."
 }

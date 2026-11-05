@@ -124,6 +124,7 @@ Version combinations exercised so far:
 
 | Module | Talos | Kubernetes | Cilium |
 |---|---|---|---|
+| 5.11.0 | v1.13.10 | v1.34.12 | 1.20.2 |
 | 5.8.0 | v1.13.10 | v1.34.11 | 1.19.7 |
 | 5.6.0 | v1.13.9 | v1.34.10 | 1.19.6 |
 | 5.5.0 | v1.13.8 | v1.34.10 | 1.19.6 |
@@ -142,7 +143,7 @@ Lifecycle operations exercised beyond upgrades:
 - Scaling worker nodepools up and down
 - Changing `talos_image_extensions` and toggling `piraeus_enabled` on a running cluster — the resulting schematic change is rolled out by `talosctl upgrade` on the existing nodes (see [Changing the Talos image after deployment](#changing-the-talos-image-after-deployment))
 
-**Not covered by these tests.** Treat the following as untested rather than unsupported: multi-host Proxmox clusters and per-nodepool host placement, Longhorn, cert-manager, Ingress via Gateway API CRDs deployed by this module, IPsec instead of WireGuard, IPv6, OIDC, and Talos Backup to S3 (the manifest is deployed but the CronJob stays suspended while no bucket is configured). Reports and fixes for these paths are welcome.
+**Not covered by these tests.** Treat the following as untested rather than unsupported: multi-host Proxmox clusters and per-nodepool host placement, Longhorn, cert-manager, Ingress via Gateway API CRDs deployed by this module, IPsec instead of WireGuard, IPv6, OIDC, the Talos Tailscale extension, and Talos Backup to S3 (the manifest is deployed but the CronJob stays suspended while no bucket is configured). Reports and fixes for these paths are welcome.
 
 ## Getting Started
 
@@ -693,6 +694,34 @@ oidc_group_mappings = [
 </details>
 
 <details>
+<summary><b>Talos Tailscale</b></summary>
+
+The module can install and configure the [Talos Tailscale system extension](https://github.com/siderolabs/extensions/tree/main/network/tailscale) on every control plane and worker node:
+
+```hcl
+talos_tailscale_enabled  = true
+talos_tailscale_auth_key = var.tailscale_auth_key
+```
+
+The module leaves containerboot defaults unchanged: Tailscale does not accept tailnet DNS settings and reruns `tailscale up` on each start. Additional settings can be supplied as `KEY=VALUE` entries:
+
+```hcl
+talos_tailscale_environment = [
+  "TS_EXTRA_ARGS=--advertise-tags=tag:kubernetes",
+]
+```
+
+`TS_AUTH_ONCE=true` avoids repeat login when state persists, but later changes to `TS_EXTRA_ARGS` are not reapplied. Use it only if that trade-off is acceptable.
+
+The module leaves Cilium device selection unchanged. Upstream testing found that Cilium auto-detects `tailscale0`, lowers the MTU to 1280 and allows pods to reach other nodes over Tailscale; restricting Cilium to the node interface or excluding `tailscale0` restores the interface MTU but blocks that pod-to-tailnet traffic. If the lower MTU causes bandwidth problems, evaluate `cilium_helm_values.devices` for your network and test the traffic your workloads need.
+
+If you also use [the Tailscale Kubernetes Operator](https://tailscale.com/docs/kubernetes-operator/reference/compatibility) to expose Services or a Service CIDR while Cilium replaces kube-proxy, ensure socket load balancing is bypassed in pod namespaces. Set `cilium_socket_lb_host_namespace_only_enabled = true` unless Cilium Gateway API already enables this setting. The Talos node extension alone does not require it.
+
+If `talos_schematic_id` is set, its custom schematic must already contain `siderolabs/tailscale`, because the module cannot modify a supplied schematic. Enabling or disabling the extension changes the schematic ID, which rolls out as described in [Changing the Talos image after deployment](#changing-the-talos-image-after-deployment). The auth key is sensitive, but it is necessarily stored in Terraform state and the rendered Talos machine configuration.
+
+</details>
+
+<details>
 <summary><b>Kubernetes RBAC</b></summary>
 
 Create custom roles and cluster roles:
@@ -786,7 +815,7 @@ Set `talos_staged_configuration_automatic_reboot_enabled = false` to stage chang
 
 ### Changing the Talos image after deployment
 
-Settings that affect the Talos base image (`talos_image_extensions`, `piraeus_enabled`, `longhorn_enabled`) change the Image Factory schematic ID. What happens then:
+Settings that affect the Talos base image (`talos_image_extensions`, `talos_tailscale_enabled`, `piraeus_enabled`, `longhorn_enabled`) change the Image Factory schematic ID. What happens then:
 
 - `proxmox_download_file.talos_image` is replaced — a new ISO is downloaded. It is the boot source for **newly created** VMs only.
 - `terraform_data.upgrade_control_plane` and `upgrade_worker` are replaced, because the schematic ID is one of their triggers. They run `talosctl upgrade` against the new installer image, so the existing nodes pick up the changed extensions through a rolling in-place upgrade with a reboot per node — the same path as a Talos version bump.
@@ -870,6 +899,7 @@ No modules.
 | [terraform_data.create_kubeconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.create_talosconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.preflight](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [terraform_data.kube_api_ready](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.synchronize_manifests](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.talos_access_data](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.talos_staged_configuration_reboot_control_plane](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
@@ -888,7 +918,6 @@ No modules.
 | [helm_template.talos_ccm](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/data-sources/template) | data source |
 | [proxmox_datastores.preflight](https://registry.terraform.io/providers/bpg/proxmox/latest/docs/data-sources/datastores) | data source |
 | [talos_client_configuration.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/client_configuration) | data source |
-| [talos_cluster_health.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/cluster_health) | data source |
 | [talos_image_factory_extensions_versions.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/image_factory_extensions_versions) | data source |
 | [talos_image_factory_urls.this](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/image_factory_urls) | data source |
 | [talos_machine_configuration.control_plane](https://registry.terraform.io/providers/siderolabs/talos/0.12.0/docs/data-sources/machine_configuration) | data source |
@@ -909,7 +938,7 @@ No modules.
 | <a name="input_cert_manager_helm_chart"></a> [cert\_manager\_helm\_chart](#input\_cert\_manager\_helm\_chart) | Name of the Helm chart used for deploying Cert Manager. | `string` | `"cert-manager"` | no |
 | <a name="input_cert_manager_helm_repository"></a> [cert\_manager\_helm\_repository](#input\_cert\_manager\_helm\_repository) | URL of the Helm repository where the Cert Manager chart is located. | `string` | `"https://charts.jetstack.io"` | no |
 | <a name="input_cert_manager_helm_values"></a> [cert\_manager\_helm\_values](#input\_cert\_manager\_helm\_values) | Custom Helm values for the Cert Manager chart deployment. These values will merge with and will override the default values provided by the Cert Manager Helm chart. | `any` | `{}` | no |
-| <a name="input_cert_manager_helm_version"></a> [cert\_manager\_helm\_version](#input\_cert\_manager\_helm\_version) | Version of the Cert Manager Helm chart to deploy. | `string` | `"v1.21.2"` | no |
+| <a name="input_cert_manager_helm_version"></a> [cert\_manager\_helm\_version](#input\_cert\_manager\_helm\_version) | Version of the Cert Manager Helm chart to deploy. | `string` | `"v1.21.3"` | no |
 | <a name="input_cilium_bpf_datapath_mode"></a> [cilium\_bpf\_datapath\_mode](#input\_cilium\_bpf\_datapath\_mode) | Mode for Pod devices for the core datapath. Allowed values: veth, netkit, netkit-l2. Warning: Netkit is still in beta and should not be used together with IPsec encryption! | `string` | `"veth"` | no |
 | <a name="input_cilium_bpf_host_legacy_routing"></a> [cilium\_bpf\_host\_legacy\_routing](#input\_cilium\_bpf\_host\_legacy\_routing) | Explicitly enable or disable Cilium's legacy host routing. When omitted, the value is automatically determined and only set to `true` if necessary, for example when IPSec is enabled. | `bool` | `null` | no |
 | <a name="input_cilium_egress_gateway_enabled"></a> [cilium\_egress\_gateway\_enabled](#input\_cilium\_egress\_gateway\_enabled) | Enables egress gateway to redirect and SNAT the traffic that leaves the cluster. | `bool` | `false` | no |
@@ -922,7 +951,7 @@ No modules.
 | <a name="input_cilium_helm_chart"></a> [cilium\_helm\_chart](#input\_cilium\_helm\_chart) | Name of the Helm chart used for deploying Cilium. | `string` | `"cilium"` | no |
 | <a name="input_cilium_helm_repository"></a> [cilium\_helm\_repository](#input\_cilium\_helm\_repository) | URL of the Helm repository where the Cilium chart is located. | `string` | `"https://helm.cilium.io"` | no |
 | <a name="input_cilium_helm_values"></a> [cilium\_helm\_values](#input\_cilium\_helm\_values) | Custom Helm values for the Cilium chart deployment. These values will merge with and will override the default values provided by the Cilium Helm chart. | `any` | `{}` | no |
-| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.20.2"` | no |
+| <a name="input_cilium_helm_version"></a> [cilium\_helm\_version](#input\_cilium\_helm\_version) | Version of the Cilium Helm chart to deploy. | `string` | `"1.20.4"` | no |
 | <a name="input_cilium_hubble_enabled"></a> [cilium\_hubble\_enabled](#input\_cilium\_hubble\_enabled) | Enables Hubble observability within Cilium, which may impact performance with an overhead of 1-15% depending on network traffic patterns and settings. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_relay_enabled"></a> [cilium\_hubble\_relay\_enabled](#input\_cilium\_hubble\_relay\_enabled) | Enables Hubble Relay, which requires Hubble to be enabled. | `bool` | `false` | no |
 | <a name="input_cilium_hubble_ui_enabled"></a> [cilium\_hubble\_ui\_enabled](#input\_cilium\_hubble\_ui\_enabled) | Enables the Hubble UI, which requires Hubble Relay to be enabled. | `bool` | `false` | no |
@@ -939,7 +968,7 @@ No modules.
 | <a name="input_client_prerequisites_check_enabled"></a> [client\_prerequisites\_check\_enabled](#input\_client\_prerequisites\_check\_enabled) | Controls whether a preflight check verifies that required client tools are installed before provisioning. | `bool` | `true` | no |
 | <a name="input_cluster_allow_scheduling_on_control_planes"></a> [cluster\_allow\_scheduling\_on\_control\_planes](#input\_cluster\_allow\_scheduling\_on\_control\_planes) | Allow scheduling on control plane nodes. If this is false, scheduling on control plane nodes is explicitly disabled. Defaults to true if there are no workers present. | `bool` | `null` | no |
 | <a name="input_cluster_domain"></a> [cluster\_domain](#input\_cluster\_domain) | Specifies the domain name used by the cluster. This domain name is integral for internal networking and service discovery within the cluster. The default is 'cluster.local', which is commonly used for local Kubernetes clusters. | `string` | `"cluster.local"` | no |
-| <a name="input_cluster_healthcheck_enabled"></a> [cluster\_healthcheck\_enabled](#input\_cluster\_healthcheck\_enabled) | Determines whether are executed during cluster deployment and upgrade. | `bool` | `true` | no |
+| <a name="input_cluster_healthcheck_enabled"></a> [cluster\_healthcheck\_enabled](#input\_cluster\_healthcheck\_enabled) | Determines whether to wait for the Kubernetes API to become ready after cluster deployment and upgrades. | `bool` | `true` | no |
 | <a name="input_cluster_kubeconfig_path"></a> [cluster\_kubeconfig\_path](#input\_cluster\_kubeconfig\_path) | If not null, the kubeconfig will be written to a file speficified. | `string` | `null` | no |
 | <a name="input_cluster_talosconfig_path"></a> [cluster\_talosconfig\_path](#input\_cluster\_talosconfig\_path) | If not null, the talosconfig will be written to a file speficified. | `string` | `null` | no |
 | <a name="input_control_plane_config_patches"></a> [control\_plane\_config\_patches](#input\_control\_plane\_config\_patches) | List of configuration patches applied to the Control Plane nodes. | `any` | `[]` | no |
@@ -985,7 +1014,7 @@ No modules.
 | <a name="input_oidc_username_claim"></a> [oidc\_username\_claim](#input\_oidc\_username\_claim) | JWT claim to use as the username | `string` | `"sub"` | no |
 | <a name="input_piraeus_enabled"></a> [piraeus\_enabled](#input\_piraeus\_enabled) | Prepares the cluster for Piraeus/LINSTOR storage: adds DRBD extension to the Talos image, loads DRBD kernel modules, and provisions a dedicated storage disk on worker nodes. The actual Piraeus Operator must be installed separately (e.g. via ArgoCD). | `bool` | `false` | no |
 | <a name="input_prometheus_operator_crds_enabled"></a> [prometheus\_operator\_crds\_enabled](#input\_prometheus\_operator\_crds\_enabled) | Enables the Prometheus Operator Custom Resource Definitions (CRDs) deployment. | `bool` | `true` | no |
-| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.94.1"` | no |
+| <a name="input_prometheus_operator_crds_version"></a> [prometheus\_operator\_crds\_version](#input\_prometheus\_operator\_crds\_version) | Specifies the version of the Prometheus Operator Custom Resource Definitions (CRDs) to deploy. | `string` | `"v0.94.2"` | no |
 | <a name="input_proxmox_ccm_api_insecure"></a> [proxmox\_ccm\_api\_insecure](#input\_proxmox\_ccm\_api\_insecure) | Allow insecure TLS connections to the Proxmox API. | `bool` | `true` | no |
 | <a name="input_proxmox_ccm_api_url"></a> [proxmox\_ccm\_api\_url](#input\_proxmox\_ccm\_api\_url) | Proxmox API URL for the CCM. If not set, derived from proxmox\_node (https://<proxmox\_node>:8006/api2/json). | `string` | `null` | no |
 | <a name="input_proxmox_ccm_enabled"></a> [proxmox\_ccm\_enabled](#input\_proxmox\_ccm\_enabled) | Enables the Proxmox Cloud Controller Manager. Manages node lifecycle (automatic cleanup of deleted nodes) and sets provider-specific labels. A dedicated Proxmox API user and token are automatically provisioned. | `bool` | `true` | no |
@@ -1043,6 +1072,9 @@ No modules.
 | <a name="input_talos_state_partition_encryption_enabled"></a> [talos\_state\_partition\_encryption\_enabled](#input\_talos\_state\_partition\_encryption\_enabled) | Enables or disables encryption for the state (`/system/state`) partition. Attention: Changing this value for an existing cluster requires manual actions as per Talos documentation (https://www.talos.dev/latest/talos-guides/configuration/disk-encryption). Ignoring this may break your cluster. | `bool` | `true` | no |
 | <a name="input_talos_static_hosts"></a> [talos\_static\_hosts](#input\_talos\_static\_hosts) | Specifies static host mappings to be added on each node. Each entry must include an IP address and a list of hostnames associated with that IP. | <pre>list(object({<br/>    ip        = string<br/>    hostnames = list(string)<br/>  }))</pre> | `[]` | no |
 | <a name="input_talos_sysctls_extra_args"></a> [talos\_sysctls\_extra\_args](#input\_talos\_sysctls\_extra\_args) | Specifies a map of sysctl key-value pairs for configuring additional kernel parameters. These settings allow for detailed customization of the operating system's behavior at runtime. | `map(string)` | `{}` | no |
+| <a name="input_talos_tailscale_auth_key"></a> [talos\_tailscale\_auth\_key](#input\_talos\_tailscale\_auth\_key) | Tailscale auth key passed to the Talos Tailscale extension as TS\_AUTHKEY. | `string` | `null` | no |
+| <a name="input_talos_tailscale_enabled"></a> [talos\_tailscale\_enabled](#input\_talos\_tailscale\_enabled) | Enable the Talos Tailscale system extension on every cluster node. | `bool` | `false` | no |
+| <a name="input_talos_tailscale_environment"></a> [talos\_tailscale\_environment](#input\_talos\_tailscale\_environment) | Environment entries passed to the Talos Tailscale extension in KEY=VALUE format. See: https://github.com/siderolabs/extensions/tree/main/network/tailscale#configuration | `list(string)` | `[]` | no |
 | <a name="input_talos_upgrade_debug"></a> [talos\_upgrade\_debug](#input\_talos\_upgrade\_debug) | Enable debug operation from kernel logs during Talos upgrades. When true, --wait is set to true by talosctl. | `bool` | `false` | no |
 | <a name="input_talos_upgrade_force"></a> [talos\_upgrade\_force](#input\_talos\_upgrade\_force) | Force the Talos upgrade by skipping etcd health and member checks. | `bool` | `false` | no |
 | <a name="input_talos_upgrade_insecure"></a> [talos\_upgrade\_insecure](#input\_talos\_upgrade\_insecure) | Upgrade using the insecure (no auth) maintenance service. | `bool` | `false` | no |
